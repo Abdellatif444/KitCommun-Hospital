@@ -6,6 +6,7 @@ import com.hospital.auth.dto.RegisterRequest;
 import com.hospital.auth.model.Role;
 import com.hospital.auth.model.User;
 import com.hospital.auth.repository.UserRepository;
+import com.hospital.auth.security.JwtService;
 import com.hospital.auth.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,16 +19,16 @@ import java.util.stream.Collectors;
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════════════╗
- * ║                     AUTH SERVICE IMPLEMENTATION                              ║
+ * ║ AUTH SERVICE IMPLEMENTATION ║
  * ╠══════════════════════════════════════════════════════════════════════════════╣
- * ║  WHY THIS CLASS EXISTS:                                                      ║
- * ║  Implements authentication logic.                                            ║
- * ║                                                                              ║
- * ║  // Security will be reinforced in Subject 3                                 ║
- * ║                                                                              ║
- * ║  IMPORTANT: This is a PLACEHOLDER implementation.                            ║
- * ║  Students MUST implement proper JWT handling in Subject 3.                   ║
- * ║  Current implementation is for structure demonstration only.                 ║
+ * ║ WHY THIS CLASS EXISTS: ║
+ * ║ Implements authentication logic. ║
+ * ║ ║
+ * ║ // Security will be reinforced in Subject 3 ║
+ * ║ ║
+ * ║ IMPORTANT: This is a PLACEHOLDER implementation. ║
+ * ║ Students MUST implement proper JWT handling in Subject 3. ║
+ * ║ Current implementation is for structure demonstration only. ║
  * ╚══════════════════════════════════════════════════════════════════════════════╝
  */
 @Service
@@ -38,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    // TODO: Inject JwtService in Subject 3
+    private final JwtService jwtService;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -66,13 +67,14 @@ public class AuthServiceImpl implements AuthService {
         User savedUser = userRepository.save(user);
         log.info("User registered with ID: {}", savedUser.getId());
 
-        // TODO: Generate actual JWT tokens in Subject 3
-        // // Security will be reinforced in Subject 3
+        String jwtToken = jwtService.generateToken(savedUser);
+        String refreshToken = jwtService.generateRefreshToken(savedUser);
+
         return AuthResponse.builder()
-                .accessToken("placeholder-access-token")  // PLACEHOLDER
-                .refreshToken("placeholder-refresh-token") // PLACEHOLDER
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(3600L)
+                .expiresIn(86400L) // 24 hours
                 .username(savedUser.getUsername())
                 .roles(savedUser.getRoles().stream()
                         .map(Enum::name)
@@ -96,13 +98,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Account is disabled");
         }
 
-        // TODO: Generate actual JWT tokens in Subject 3
-        // // Security will be reinforced in Subject 3
+        String jwtToken = jwtService.generateToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
+
         return AuthResponse.builder()
-                .accessToken("placeholder-access-token")  // PLACEHOLDER
-                .refreshToken("placeholder-refresh-token") // PLACEHOLDER
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
                 .tokenType("Bearer")
-                .expiresIn(3600L)
+                .expiresIn(86400L) // 24 hours
                 .username(user.getUsername())
                 .roles(user.getRoles().stream()
                         .map(Enum::name)
@@ -113,17 +116,32 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse refreshToken(String refreshToken) {
         log.debug("Refreshing token");
-        // TODO: Implement token refresh in Subject 3
-        // // Security will be reinforced in Subject 3
-        throw new UnsupportedOperationException("Token refresh not implemented - Subject 3");
+        // Simple implementation: extract username, find user, check if token valid,
+        // generate new access token
+        String username = jwtService.extractUsername(refreshToken);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (jwtService.isTokenValid(refreshToken, user)) {
+            String accessToken = jwtService.generateToken(user);
+            return AuthResponse.builder()
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .tokenType("Bearer")
+                    .expiresIn(86400L)
+                    .username(user.getUsername())
+                    .roles(user.getRoles().stream()
+                            .map(Enum::name)
+                            .collect(Collectors.toSet()))
+                    .build();
+        } else {
+            throw new RuntimeException("Invalid refresh token");
+        }
     }
 
     @Override
     public boolean validateToken(String token) {
         log.debug("Validating token");
-        // TODO: Implement token validation in Subject 3
-        // // Security will be reinforced in Subject 3
-        return false; // PLACEHOLDER
+        return jwtService.isTokenValid(token);
     }
 }
-

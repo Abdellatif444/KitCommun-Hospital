@@ -158,100 +158,100 @@ services:
   # Students: Uncomment and configure as you implement each service
   # ═══════════════════════════════════════════════════════════════════════════
 
-  # auth-service:
-  #   build:
-  #     context: .
-  #     dockerfile: auth-service/Dockerfile
-  #   container_name: auth-service
-  #   ports:
-  #     - "8085:8085"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/hospital_auth
-  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
-  #   depends_on:
-  #     discovery-service:
-  #       condition: service_healthy
-  #     postgres-auth:
-  #       condition: service_healthy
-  #   networks:
-  #     - hospital-network
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    container_name: auth-service
+    ports:
+      - "8085:8085"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/hospital_auth
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      postgres-auth:
+        condition: service_healthy
+    networks:
+      - hospital-network
 
-  # patient-service:
-  #   build:
-  #     context: .
-  #     dockerfile: patient-service/Dockerfile
-  #   container_name: patient-service
-  #   ports:
-  #     - "8081:8081"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patients:5432/hospital_patients
-  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
-  #   depends_on:
-  #     discovery-service:
-  #       condition: service_healthy
-  #     postgres-patients:
-  #       condition: service_healthy
-  #   networks:
-  #     - hospital-network
+  patient-service:
+    build:
+      context: .
+      dockerfile: patient-service/Dockerfile
+    container_name: patient-service
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patients:5432/hospital_patients
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      postgres-patients:
+        condition: service_healthy
+    networks:
+      - hospital-network
 
-  # staff-service:
-  #   build:
-  #     context: .
-  #     dockerfile: staff-service/Dockerfile
-  #   container_name: staff-service
-  #   ports:
-  #     - "8082:8082"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-staff:5432/hospital_staff
-  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
-  #   depends_on:
-  #     discovery-service:
-  #       condition: service_healthy
-  #     postgres-staff:
-  #       condition: service_healthy
-  #   networks:
-  #     - hospital-network
+  staff-service:
+    build:
+      context: .
+      dockerfile: staff-service/Dockerfile
+    container_name: staff-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-staff:5432/hospital_staff
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      postgres-staff:
+        condition: service_healthy
+    networks:
+      - hospital-network
 
-  # appointment-service:
-  #   build:
-  #     context: .
-  #     dockerfile: appointment-service/Dockerfile
-  #   container_name: appointment-service
-  #   ports:
-  #     - "8083:8083"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-appointments:5432/hospital_appointments
-  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
-  #   depends_on:
-  #     discovery-service:
-  #       condition: service_healthy
-  #     postgres-appointments:
-  #       condition: service_healthy
-  #   networks:
-  #     - hospital-network
+  appointment-service:
+    build:
+      context: .
+      dockerfile: appointment-service/Dockerfile
+    container_name: appointment-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-appointments:5432/hospital_appointments
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      postgres-appointments:
+        condition: service_healthy
+    networks:
+      - hospital-network
 
-  # medical-record-service:
-  #   build:
-  #     context: .
-  #     dockerfile: medical-record-service/Dockerfile
-  #   container_name: medical-record-service
-  #   ports:
-  #     - "8084:8084"
-  #   environment:
-  #     - SPRING_PROFILES_ACTIVE=docker
-  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-medical-records:5432/hospital_medical_records
-  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
-  #   depends_on:
-  #     discovery-service:
-  #       condition: service_healthy
-  #     postgres-medical-records:
-  #       condition: service_healthy
-  #   networks:
-  #     - hospital-network
+  medical-record-service:
+    build:
+      context: .
+      dockerfile: medical-record-service/Dockerfile
+    container_name: medical-record-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-medical-records:5432/hospital_medical_records
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      postgres-medical-records:
+        condition: service_healthy
+    networks:
+      - hospital-network
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # NETWORKS

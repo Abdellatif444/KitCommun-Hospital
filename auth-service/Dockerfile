@@ -1,8 +1,8 @@
 # Auth Service Dockerfile
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY auth-service ./auth-service
+COPY . .
+RUN mvn clean install -N
 RUN mvn clean package -pl auth-service -am -DskipTests
 
 FROM eclipse-temurin:17-jre-alpine

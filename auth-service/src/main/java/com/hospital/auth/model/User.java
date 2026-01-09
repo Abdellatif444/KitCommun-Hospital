@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -12,16 +13,16 @@ import java.util.Set;
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════════════╗
- * ║                             USER ENTITY                                      ║
+ * ║ USER ENTITY ║
  * ╠══════════════════════════════════════════════════════════════════════════════╣
- * ║  WHY THIS CLASS EXISTS:                                                      ║
- * ║  Represents a system user for authentication purposes.                       ║
- * ║                                                                              ║
- * ║  NOTE: This is separate from Staff/Patient entities.                         ║
- * ║  Users are linked to Staff via staffId for authorization.                    ║
- * ║                                                                              ║
- * ║  // Security will be reinforced in Subject 3                                 ║
- * ║  Students: Implement proper password hashing and security.                   ║
+ * ║ WHY THIS CLASS EXISTS: ║
+ * ║ Represents a system user for authentication purposes. ║
+ * ║ ║
+ * ║ NOTE: This is separate from Staff/Patient entities. ║
+ * ║ Users are linked to Staff via staffId for authorization. ║
+ * ║ ║
+ * ║ // Security will be reinforced in Subject 3 ║
+ * ║ Students: Implement proper password hashing and security. ║
  * ╚══════════════════════════════════════════════════════════════════════════════╝
  */
 @Entity
@@ -30,7 +31,7 @@ import java.util.Set;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -102,5 +103,33 @@ public class User {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-}
 
+    // UserDetails Implementation
+
+    @Override
+    public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority(role.name()))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return accountNonLocked;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+}
