@@ -1,0 +1,274 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                    DOCKER COMPOSE - HOSPITAL MANAGEMENT SYSTEM               ║
+# ╠══════════════════════════════════════════════════════════════════════════════╣
+# ║  WHY THIS FILE EXISTS:                                                       ║
+# ║  Orchestrates all microservices and their dependencies.                      ║
+# ║                                                                              ║
+# ║  HOW TO USE:                                                                 ║
+# ║  1. Start all services:     docker-compose up -d                             ║
+# ║  2. View logs:              docker-compose logs -f                           ║
+# ║  3. Stop all services:      docker-compose down                              ║
+# ║  4. Rebuild and restart:    docker-compose up -d --build                     ║
+# ║                                                                              ║
+# ║  Students: Start with just the databases first, then add services.           ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+version: '3.8'
+
+services:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DATABASES
+  # WHY separate databases: Microservices pattern - each service owns its data
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  postgres-patients:
+    image: postgres:15-alpine
+    container_name: postgres-patients
+    environment:
+      POSTGRES_DB: hospital_patients
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-patients-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hospital-network
+
+  postgres-staff:
+    image: postgres:15-alpine
+    container_name: postgres-staff
+    environment:
+      POSTGRES_DB: hospital_staff
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-staff-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hospital-network
+
+  postgres-appointments:
+    image: postgres:15-alpine
+    container_name: postgres-appointments
+    environment:
+      POSTGRES_DB: hospital_appointments
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-appointments-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hospital-network
+
+  postgres-medical-records:
+    image: postgres:15-alpine
+    container_name: postgres-medical-records
+    environment:
+      POSTGRES_DB: hospital_medical_records
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres-medical-records-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hospital-network
+
+  postgres-auth:
+    image: postgres:15-alpine
+    container_name: postgres-auth
+    environment:
+      POSTGRES_DB: hospital_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres-auth-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hospital-network
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # INFRASTRUCTURE SERVICES
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  discovery-service:
+    build:
+      context: .
+      dockerfile: discovery-service/Dockerfile
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - hospital-network
+
+  gateway-service:
+    build:
+      context: .
+      dockerfile: gateway-service/Dockerfile
+    container_name: gateway-service
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+    networks:
+      - hospital-network
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BUSINESS SERVICES
+  # Students: Uncomment and configure as you implement each service
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  # auth-service:
+  #   build:
+  #     context: .
+  #     dockerfile: auth-service/Dockerfile
+  #   container_name: auth-service
+  #   ports:
+  #     - "8085:8085"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-auth:5432/hospital_auth
+  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+  #   depends_on:
+  #     discovery-service:
+  #       condition: service_healthy
+  #     postgres-auth:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+
+  # patient-service:
+  #   build:
+  #     context: .
+  #     dockerfile: patient-service/Dockerfile
+  #   container_name: patient-service
+  #   ports:
+  #     - "8081:8081"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patients:5432/hospital_patients
+  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+  #   depends_on:
+  #     discovery-service:
+  #       condition: service_healthy
+  #     postgres-patients:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+
+  # staff-service:
+  #   build:
+  #     context: .
+  #     dockerfile: staff-service/Dockerfile
+  #   container_name: staff-service
+  #   ports:
+  #     - "8082:8082"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-staff:5432/hospital_staff
+  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+  #   depends_on:
+  #     discovery-service:
+  #       condition: service_healthy
+  #     postgres-staff:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+
+  # appointment-service:
+  #   build:
+  #     context: .
+  #     dockerfile: appointment-service/Dockerfile
+  #   container_name: appointment-service
+  #   ports:
+  #     - "8083:8083"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-appointments:5432/hospital_appointments
+  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+  #   depends_on:
+  #     discovery-service:
+  #       condition: service_healthy
+  #     postgres-appointments:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+
+  # medical-record-service:
+  #   build:
+  #     context: .
+  #     dockerfile: medical-record-service/Dockerfile
+  #   container_name: medical-record-service
+  #   ports:
+  #     - "8084:8084"
+  #   environment:
+  #     - SPRING_PROFILES_ACTIVE=docker
+  #     - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-medical-records:5432/hospital_medical_records
+  #     - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+  #   depends_on:
+  #     discovery-service:
+  #       condition: service_healthy
+  #     postgres-medical-records:
+  #       condition: service_healthy
+  #   networks:
+  #     - hospital-network
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NETWORKS
+# WHY custom network: Allows services to communicate by container name
+# ═══════════════════════════════════════════════════════════════════════════════
+networks:
+  hospital-network:
+    driver: bridge
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VOLUMES
+# WHY named volumes: Data persists between container restarts
+# ═══════════════════════════════════════════════════════════════════════════════
+volumes:
+  postgres-patients-data:
+  postgres-staff-data:
+  postgres-appointments-data:
+  postgres-medical-records-data:
+  postgres-auth-data:
+

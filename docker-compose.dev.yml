@@ -1,0 +1,39 @@
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║                 DOCKER COMPOSE - DEVELOPMENT (Databases Only)                ║
+# ╠══════════════════════════════════════════════════════════════════════════════╣
+# ║  WHY THIS FILE EXISTS:                                                       ║
+# ║  Simplified compose file that only starts databases.                         ║
+# ║  Run microservices locally from your IDE for easier debugging.               ║
+# ║                                                                              ║
+# ║  HOW TO USE:                                                                 ║
+# ║  1. Start databases: docker-compose -f docker-compose.dev.yml up -d          ║
+# ║  2. Run services from IDE                                                    ║
+# ║  3. Stop: docker-compose -f docker-compose.dev.yml down                      ║
+# ║                                                                              ║
+# ║  Students: Use this for development, full compose for testing.               ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
+version: '3.8'
+
+services:
+  # Single PostgreSQL instance with multiple databases (simpler for development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: hospital-postgres-dev
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+      - ./docker/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-dev-data:
+

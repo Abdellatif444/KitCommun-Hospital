@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    ╔══════════════════════════════════════════════════════════════════════════════╗
+    ║                         DISCOVERY SERVICE (EUREKA)                           ║
+    ╠══════════════════════════════════════════════════════════════════════════════╣
+    ║  WHY THIS SERVICE EXISTS:                                                    ║
+    ║  In a microservices architecture, services need to FIND each other.          ║
+    ║  Eureka acts as a "phone book" - services register here and query            ║
+    ║  to discover other services' locations dynamically.                          ║
+    ║                                                                              ║
+    ║  Students: This is the FIRST service you should start.                       ║
+    ║  All other services depend on it being available.                            ║
+    ╚══════════════════════════════════════════════════════════════════════════════╝
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hospital</groupId>
+        <artifactId>hospital-management-system</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>discovery-service</artifactId>
+    <name>Discovery Service (Eureka Server)</name>
+
+    <dependencies>
+        <!-- Eureka Server: The service registry -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
+

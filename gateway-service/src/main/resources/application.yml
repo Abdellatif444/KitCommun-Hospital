@@ -1,0 +1,111 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# API GATEWAY CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════════
+# WHY: The Gateway is the single entry point for all microservices.
+# All external requests pass through here before reaching any service.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+server:
+  port: 8080  # Main entry point for the entire system
+
+spring:
+  application:
+    name: gateway-service
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # GATEWAY ROUTES CONFIGURATION
+  # WHY: Each route maps a URL pattern to a microservice
+  # lb:// means "load balanced" - uses Eureka to find service instances
+  # ═══════════════════════════════════════════════════════════════════════════
+  cloud:
+    gateway:
+      routes:
+        # ─────────────────────────────────────────────────────────────────────
+        # AUTH SERVICE ROUTES
+        # This endpoint is mandatory according to the Kit Commun
+        # ─────────────────────────────────────────────────────────────────────
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0  # Keep the full path
+
+        # ─────────────────────────────────────────────────────────────────────
+        # PATIENT SERVICE ROUTES
+        # This endpoint is mandatory according to the Kit Commun
+        # ─────────────────────────────────────────────────────────────────────
+        - id: patient-service
+          uri: lb://patient-service
+          predicates:
+            - Path=/api/patients/**
+          filters:
+            - StripPrefix=0
+
+        # ─────────────────────────────────────────────────────────────────────
+        # STAFF SERVICE ROUTES
+        # This endpoint is mandatory according to the Kit Commun
+        # ─────────────────────────────────────────────────────────────────────
+        - id: staff-service
+          uri: lb://staff-service
+          predicates:
+            - Path=/api/staff/**
+          filters:
+            - StripPrefix=0
+
+        # ─────────────────────────────────────────────────────────────────────
+        # APPOINTMENT SERVICE ROUTES
+        # This endpoint is mandatory according to the Kit Commun
+        # ─────────────────────────────────────────────────────────────────────
+        - id: appointment-service
+          uri: lb://appointment-service
+          predicates:
+            - Path=/api/appointments/**
+          filters:
+            - StripPrefix=0
+
+        # ─────────────────────────────────────────────────────────────────────
+        # MEDICAL RECORD SERVICE ROUTES
+        # This endpoint is mandatory according to the Kit Commun
+        # ─────────────────────────────────────────────────────────────────────
+        - id: medical-record-service
+          uri: lb://medical-record-service
+          predicates:
+            - Path=/api/medical-records/**
+          filters:
+            - StripPrefix=0
+
+      # Global CORS configuration
+      # WHY: Allows frontend applications to call the API
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# EUREKA CLIENT CONFIGURATION
+# WHY: Gateway must discover other services via Eureka
+# ═══════════════════════════════════════════════════════════════════════════════
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# LOGGING
+# ═══════════════════════════════════════════════════════════════════════════════
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: DEBUG
+    com.hospital.gateway: DEBUG
+
