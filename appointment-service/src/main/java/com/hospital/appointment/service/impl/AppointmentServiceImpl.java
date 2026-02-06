@@ -86,7 +86,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByPatient(Long patientId) {
         log.debug("Fetching appointments for patient: {}", patientId);
-        return appointmentRepository.findByPatientIdOrderByAppointmentDateTimeDesc(patientId)
+        // Modified for Subject 1: Only return active appointments
+        return appointmentRepository.findByPatientIdAndActiveTrueOrderByAppointmentDateTimeDesc(patientId)
                 .stream()
                 .map(appointmentMapper::toDTO)
                 .collect(Collectors.toList());
@@ -96,7 +97,8 @@ public class AppointmentServiceImpl implements AppointmentService {
     @Transactional(readOnly = true)
     public List<AppointmentDTO> getAppointmentsByDoctor(Long doctorId) {
         log.debug("Fetching appointments for doctor: {}", doctorId);
-        return appointmentRepository.findByDoctorIdOrderByAppointmentDateTimeAsc(doctorId)
+        // Modified for Subject 1: Only return active appointments
+        return appointmentRepository.findByDoctorIdAndActiveTrueOrderByAppointmentDateTimeAsc(doctorId)
                 .stream()
                 .map(appointmentMapper::toDTO)
                 .collect(Collectors.toList());
@@ -111,6 +113,7 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         return appointmentRepository.findDoctorAppointmentsInRange(doctorId, startOfDay, endOfDay)
                 .stream()
+                .filter(Appointment::getActive) // Logic Layer Filtering for strict compliance
                 .map(appointmentMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -122,6 +125,10 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment existingAppointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new AppointmentNotFoundException("Appointment not found: " + id));
+
+        if (!Boolean.TRUE.equals(existingAppointment.getActive())) {
+             throw new AppointmentNotFoundException("Appointment record is inactive (deleted): " + id);
+        }
 
         appointmentMapper.updateEntityFromDTO(appointmentDTO, existingAppointment);
         Appointment updatedAppointment = appointmentRepository.save(existingAppointment);
@@ -152,8 +159,17 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new AppointmentNotFoundException("Appointment not found: " + id));
 
+        // Subject 1: Traçabilité
+        // We do not delete, we set status to CANCELLED and we can also deactivate if needed.
+        // For appointments, keeping it ACTIVE but with status CANCELLED is often better for history.
+        // However, if the user explicitly requested "DELETE", we use soft delete.
+        
         appointment.setStatus(AppointmentStatus.CANCELLED);
+        // appointment.setActive(false); // Optional: depends on business rule. 
+        // For now, allow viewing cancelled appointments in history.
+        
         appointmentRepository.save(appointment);
+        log.info("Appointment cancelled successfully: {}", id);
     }
 
     @Override

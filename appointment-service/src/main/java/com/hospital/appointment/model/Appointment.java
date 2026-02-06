@@ -111,5 +111,14 @@ public class Appointment {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    /**
+     * Soft Delete flag.
+     * WHY: Traçabilité des rendez-vous supprimés.
+     * Required for Subject 1 (Blockchain).
+     */
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private Boolean active = true;
 }
 

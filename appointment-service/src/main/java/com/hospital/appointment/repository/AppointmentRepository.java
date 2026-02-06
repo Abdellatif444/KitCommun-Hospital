@@ -25,14 +25,15 @@ import java.util.List;
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
 
     /**
-     * Finds all appointments for a patient.
+     * Finds all appointments for a patient (Only Active).
+     * Modified for Subject 1: Traçabilité.
      */
-    List<Appointment> findByPatientIdOrderByAppointmentDateTimeDesc(Long patientId);
+    List<Appointment> findByPatientIdAndActiveTrueOrderByAppointmentDateTimeDesc(Long patientId);
 
     /**
-     * Finds all appointments for a doctor.
+     * Finds all appointments for a doctor (Only Active).
      */
-    List<Appointment> findByDoctorIdOrderByAppointmentDateTimeAsc(Long doctorId);
+    List<Appointment> findByDoctorIdAndActiveTrueOrderByAppointmentDateTimeAsc(Long doctorId);
 
     /**
      * Finds appointments by status.
