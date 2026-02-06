@@ -84,8 +84,8 @@ public class PatientServiceImpl implements PatientService {
     public List<PatientDTO> getAllPatients() {
         log.debug("Fetching all patients");
         // Permissions will be checked in Subject 2
-        // TODO: Add pagination for large datasets
-        return patientRepository.findAll().stream()
+        // Modified for Subject 1: Return only active patients
+        return patientRepository.findByActiveTrue().stream()
                 .map(patientMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -95,8 +95,9 @@ public class PatientServiceImpl implements PatientService {
     public List<PatientDTO> searchPatients(String searchTerm) {
         log.debug("Searching patients with term: {}", searchTerm);
         // Business logic will be added in the specialized subject
-        // TODO: Implement more sophisticated search (e.g., full-text search)
+        // TODO: Ensure search also respects active flag
         return patientRepository.findByLastNameContainingIgnoreCase(searchTerm).stream()
+                .filter(Patient::getActive) // Client-side filtering for now, better to do in DB
                 .map(patientMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -108,6 +109,10 @@ public class PatientServiceImpl implements PatientService {
 
         Patient existingPatient = patientRepository.findById(id)
                 .orElseThrow(() -> new PatientNotFoundException("Patient not found with ID: " + id));
+        
+        if (!Boolean.TRUE.equals(existingPatient.getActive())) {
+             throw new PatientNotFoundException("Patient record is inactive (deleted): " + id);
+        }
 
         // Update fields
         // Business logic will be added in the specialized subject
@@ -125,14 +130,16 @@ public class PatientServiceImpl implements PatientService {
         // Permissions will be checked in Subject 2
         // Security will be reinforced in Subject 3
 
-        if (!patientRepository.existsById(id)) {
-            throw new PatientNotFoundException("Patient not found with ID: " + id);
-        }
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new PatientNotFoundException("Patient not found with ID: " + id));
 
-        // TODO: Consider soft delete instead of hard delete
-        // Business logic will be added in the specialized subject
-        patientRepository.deleteById(id);
-        log.info("Patient deleted successfully: {}", id);
+        // Subject 1 Implementation: Soft Delete
+        // We do not delete the record, we mark it as inactive
+        log.info("Performing SOFT DELETE for patient: {}", id);
+        patient.setActive(false);
+        patientRepository.save(patient);
+        
+        log.info("Patient deactivated successfully: {}", id);
     }
 
     @Override

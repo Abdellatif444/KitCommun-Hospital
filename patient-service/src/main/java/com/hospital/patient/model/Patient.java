@@ -125,6 +125,15 @@ public class Patient {
     private LocalDateTime updatedAt;
 
     /**
+     * Soft Delete flag.
+     * WHY: To maintain audit trail even after "deletion".
+     * Required for Subject 1 (Blockchain & Audit).
+     */
+    @Builder.Default
+    @Column(name = "is_active", nullable = false)
+    private Boolean active = true;
+
+    /**
      * Automatically sets timestamps before persisting.
      */
     @PrePersist

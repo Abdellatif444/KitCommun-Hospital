@@ -143,7 +143,7 @@ services:
       dockerfile: gateway-service/Dockerfile
     container_name: gateway-service
     ports:
-      - "8080:8080"
+      - "8090:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
