@@ -1,7 +1,7 @@
 module.exports = {
     networks: {
         hospital: {
-            host: "127.0.0.1",     // Localhost (since we will run truffle from host or expose port)
+            host: "hospital-blockchain",     // Docker container name (for internal network)
             port: 8545,            // Port Ganache défini dans docker-compose
             network_id: "*",       // Match any network id
         }
