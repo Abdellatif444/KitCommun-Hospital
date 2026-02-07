@@ -1,0 +1,19 @@
+server:
+  port: 8086 # Port dédié à l'audit service
+
+spring:
+  application:
+    name: audit-service
+  main:
+    web-application-type: servlet
+
+# Eureka Client Configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# Web3j Configuration for Blockchain
+web3j:
+  client-address: http://localhost:8545 # Adresse de Ganache
+  admin-client: true # Pour gérer les comptes si nécessaire
