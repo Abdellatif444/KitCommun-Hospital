@@ -10,10 +10,7 @@ services:
       - "8545:8545"
     # Create deterministic accounts with a fixed mnemonic for consistent testing
     command: >
-      --mnemonic "doctor hospital wallet secure block chain audit kit commun 2024"
-      --networkId 5777
-      --hostname 0.0.0.0
-      --db /data
+      --mnemonic "doctor hospital wallet secure block chain audit kit commun 2024" --networkId 5777 --hostname 0.0.0.0 --db /data
     volumes:
       - ./ganache_data:/data
     networks:
@@ -23,6 +20,19 @@ services:
         limits:
           memory: 512M
 
+  # TRUFFLE DEPLOYER
+  # Automatically compiles and deploys Smart Contracts to Ganache
+  truffle-deployer:
+    build: .
+    container_name: hospital-truffle-deployer
+    volumes:
+      - ./:/app
+    networks:
+      - hospital-network
+    depends_on:
+      - ganache
+    command: sh -c "sleep 5 && truffle migrate --reset --network hospital"
+
 networks:
   hospital-network:
-    external: true  # Connect to the existing Kit Commun network
+    external: true # Connect to the existing Kit Commun network
