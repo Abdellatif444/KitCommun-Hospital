@@ -1,4 +1,7 @@
 module.exports = {
+    contracts_build_directory: "./build/contracts",
+    contracts_directory: "./smart-contracts",
+    migrations_directory: "./smart-contracts",
     networks: {
         hospital: {
             host: "hospital-blockchain",     // Docker container name (for internal network)

@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18-buster
 
 # Install Truffle
 RUN npm install -g truffle

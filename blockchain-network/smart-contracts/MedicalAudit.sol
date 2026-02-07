@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Force Recompile: Final Attempt - Build folder removed manually
 pragma solidity ^0.8.0;
 
 /**
