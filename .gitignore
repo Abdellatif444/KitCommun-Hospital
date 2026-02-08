@@ -46,3 +46,17 @@ yarn-error.log*
 autres/
 notre_presentation/
 notre_rapport_Blocktchain/
+
+### Blockchain & Security ###
+# Environment variables (contains private keys!)
+.env
+*.env
+audit-service/.env
+
+# Ganache blockchain data
+blockchain-network/ganache_data/
+**/ganache_data/
+!blockHashes*
+!blockLogs*
+!trie_db*
+

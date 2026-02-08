@@ -26,17 +26,24 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
-        <!-- Web3j for Blockchain Interaction -->
+        <!-- Web3j Core instead of Starter -->
         <dependency>
             <groupId>org.web3j</groupId>
-            <artifactId>web3j-spring-boot-starter</artifactId>
-            <version>4.10.0</version>
+            <artifactId>core</artifactId>
+            <version>4.10.3</version>
         </dependency>
 
         <!-- Validation -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- DotEnv - Load .env file automatically -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
         </dependency>
     </dependencies>
 
@@ -46,6 +53,8 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- Note: Le wrapper MedicalAudit.java a été créé manuellement -->
+            <!-- Le plugin web3j-maven-plugin n'est pas nécessaire ici -->
         </plugins>
     </build>
 </project>

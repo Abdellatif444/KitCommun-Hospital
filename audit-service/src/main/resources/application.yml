@@ -1,19 +1,31 @@
 server:
-  port: 8086 # Port dédié à l'audit service
+  port: 8083
 
 spring:
   application:
     name: audit-service
-  main:
-    web-application-type: servlet
-
-# Eureka Client Configuration
+  cloud:
+    discovery:
+      enabled: false 
+      # On desactive temporairement Eureka pour tester en isolation si besoin, 
+      # ou on le laisse true si vous avez le discovery-service lance. 
+      # Mettons true pour l'integration complete.
+      
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
 
-# Web3j Configuration for Blockchain
 web3j:
-  client-address: http://localhost:8545 # Adresse de Ganache
-  admin-client: true # Pour gérer les comptes si nécessaire
+  # URL de connexion a Ganache (defini dans .env)
+  client-address: ${WEB3J_CLIENT_ADDRESS:http://localhost:8545}
+  
+  # Adresse du smart contract MedicalAudit (defini dans .env)
+  contract-address: ${WEB3J_CONTRACT_ADDRESS}
+  
+  # Cle privee du compte Ganache (defini dans .env)
+  # ⚠️ ATTENTION: Ne JAMAIS mettre en dur ici !
+  # Toujours utiliser des variables d'environnement
+  wallet-private-key: ${WEB3J_WALLET_PRIVATE_KEY}

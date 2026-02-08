@@ -33,7 +33,7 @@ services:
     volumes:
       - postgres-patients-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,7 +52,7 @@ services:
     volumes:
       - postgres-staff-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -71,7 +71,7 @@ services:
     volumes:
       - postgres-appointments-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -90,7 +90,7 @@ services:
     volumes:
       - postgres-medical-records-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -109,10 +109,25 @@ services:
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - hospital-network
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BLOCKCHAIN - GANACHE
+  # WHY Ganache: Local Ethereum blockchain for testing smart contracts
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  ganache:
+    image: trufflesuite/ganache-cli:latest
+    container_name: ganache-blockchain
+    ports:
+      - "7545:8545"
+    command: >
+      --host 0.0.0.0 --port 8545 --networkId 5777 --gasLimit 6721975 --gasPrice 20000000000 --mnemonic "myth like bonus scare over problem client lizard pioneer submit female collect" --accounts 10 --defaultBalanceEther 100
     networks:
       - hospital-network
 
@@ -130,7 +145,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      test: [ "CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -271,4 +286,5 @@ volumes:
   postgres-appointments-data:
   postgres-medical-records-data:
   postgres-auth-data:
+
 
