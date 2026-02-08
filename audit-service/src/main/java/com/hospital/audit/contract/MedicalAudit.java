@@ -102,10 +102,10 @@ public class MedicalAudit extends Contract {
         return actionLoggedEventFlowable(filter);
     }
 
-    public RemoteFunctionCall<TransactionReceipt> logAction(String action, String userId, String details) {
+    public RemoteFunctionCall<TransactionReceipt> logAction(String userId, String action, String resourceId, String dataHash) {
         final Function function = new Function(
                 FUNC_LOGACTION, 
-                Arrays.<Type>asList(new Utf8String(action), new Utf8String(userId), new Utf8String(details)), 
+                Arrays.<Type>asList(new Utf8String(userId), new Utf8String(action), new Utf8String(resourceId), new Utf8String(dataHash)), 
                 Collections.<TypeReference<?>>emptyList());
         return executeRemoteCallTransaction(function);
     }
