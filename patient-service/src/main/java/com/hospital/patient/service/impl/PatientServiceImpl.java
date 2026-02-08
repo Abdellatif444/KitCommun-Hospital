@@ -1,5 +1,6 @@
 package com.hospital.patient.service.impl;
 
+import com.hospital.patient.client.AuditClient;
 import com.hospital.patient.dto.PatientCreateRequest;
 import com.hospital.patient.dto.PatientDTO;
 import com.hospital.patient.exception.PatientNotFoundException;
@@ -40,6 +41,7 @@ public class PatientServiceImpl implements PatientService {
 
     private final PatientRepository patientRepository;
     private final PatientMapper patientMapper;
+    private final AuditClient auditClient;
 
     @Override
     public PatientDTO createPatient(PatientCreateRequest request) {
@@ -59,6 +61,9 @@ public class PatientServiceImpl implements PatientService {
         Patient savedPatient = patientRepository.save(patient);
         log.info("Patient created with ID: {}", savedPatient.getId());
 
+        // AUDIT LOG
+        auditClient.logAction(getCurrentUserId(), "CREATE_PATIENT", savedPatient.getId().toString(), "Patient created");
+
         return patientMapper.toDTO(savedPatient);
     }
 
@@ -67,16 +72,26 @@ public class PatientServiceImpl implements PatientService {
     public Optional<PatientDTO> getPatientById(Long id) {
         log.debug("Fetching patient by ID: {}", id);
         // Permissions will be checked in Subject 2
-        return patientRepository.findById(id)
+        Optional<PatientDTO> patient = patientRepository.findById(id)
                 .map(patientMapper::toDTO);
+
+        // AUDIT LOG (only if found)
+        patient.ifPresent(p -> auditClient.logAction(getCurrentUserId(), "VIEW_PATIENT", id.toString(), "Accessed patient details"));
+        
+        return patient;
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<PatientDTO> getPatientByNationalId(String nationalId) {
         log.debug("Fetching patient by national ID: {}", nationalId);
-        return patientRepository.findByNationalId(nationalId)
+        Optional<PatientDTO> patient = patientRepository.findByNationalId(nationalId)
                 .map(patientMapper::toDTO);
+
+        // AUDIT LOG
+        patient.ifPresent(p -> auditClient.logAction(getCurrentUserId(), "SEARCH_PATIENT", p.getId().toString(), "Searched by National ID"));
+        
+        return patient;
     }
 
     @Override
@@ -85,9 +100,15 @@ public class PatientServiceImpl implements PatientService {
         log.debug("Fetching all patients");
         // Permissions will be checked in Subject 2
         // Modified for Subject 1: Return only active patients
-        return patientRepository.findByActiveTrue().stream()
+        List<PatientDTO> patients = patientRepository.findByActiveTrue().stream()
                 .map(patientMapper::toDTO)
                 .collect(Collectors.toList());
+        
+        // AUDIT LOG (listing)
+        // Note: Listing might generate too many logs if we log each item. We log the action instead.
+        auditClient.logAction(getCurrentUserId(), "LIST_PATIENTS", "ALL", "Listed all active patients. Count: " + patients.size());
+        
+        return patients;
     }
 
     @Override
@@ -96,10 +117,15 @@ public class PatientServiceImpl implements PatientService {
         log.debug("Searching patients with term: {}", searchTerm);
         // Business logic will be added in the specialized subject
         // TODO: Ensure search also respects active flag
-        return patientRepository.findByLastNameContainingIgnoreCase(searchTerm).stream()
+        List<PatientDTO> results = patientRepository.findByLastNameContainingIgnoreCase(searchTerm).stream()
                 .filter(Patient::getActive) // Client-side filtering for now, better to do in DB
                 .map(patientMapper::toDTO)
                 .collect(Collectors.toList());
+                
+        // AUDIT LOG (search)
+        auditClient.logAction(getCurrentUserId(), "SEARCH_PATIENTS", "QUERY:" + searchTerm, "Search results count: " + results.size());
+        
+        return results;
     }
 
     @Override
@@ -121,6 +147,9 @@ public class PatientServiceImpl implements PatientService {
         Patient updatedPatient = patientRepository.save(existingPatient);
         log.info("Patient updated successfully: {}", id);
 
+        // AUDIT LOG
+        auditClient.logAction(getCurrentUserId(), "UPDATE_PATIENT", id.toString(), "Patient updated");
+
         return patientMapper.toDTO(updatedPatient);
     }
 
@@ -140,6 +169,9 @@ public class PatientServiceImpl implements PatientService {
         patientRepository.save(patient);
         
         log.info("Patient deactivated successfully: {}", id);
+
+        // AUDIT LOG
+        auditClient.logAction(getCurrentUserId(), "DELETE_PATIENT", id.toString(), "Patient soft deleted (deactivated)");
     }
 
     @Override
@@ -147,5 +179,9 @@ public class PatientServiceImpl implements PatientService {
     public boolean existsById(Long id) {
         return patientRepository.existsById(id);
     }
+    
+    // Helper to get current user ID (placeholder for now until Security is implemented)
+    private String getCurrentUserId() {
+        return "SYSTEM_USER"; // TODO: Replace with SecurityContextHolder
+    }
 }
-
