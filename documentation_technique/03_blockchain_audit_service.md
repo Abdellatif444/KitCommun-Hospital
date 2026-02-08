@@ -584,7 +584,47 @@ Logique métier encapsulant Web3j :
 
 ---
 
-## 🔮 Prochaines étapes
+## 🔌 Intégration Patient Service (Réalisée)
+
+Le microservice `patient-service` a été modifié pour notifier le `audit-service` à chaque opération CRUD (Création, Lecture, Mise à jour, Suppression).
+
+### Structure Client
+Un `AuditClient` a été ajouté pour encapsuler les appels REST vers le service d'audit.
+
+**Fichier:** `com.hospital.patient.client.AuditClient`
+- Utilise `RestTemplate` pour envoyer des requêtes POST synchrones.
+- Endpoint cible: `http://audit-service:8083/audit/log`.
+- En cas d'échec (audit service down), l'erreur est loguée mais ne bloque pas l'opération métier (fail-safe).
+
+### Injection dans la logique métier
+Dans `PatientServiceImpl`, l'audit est déclenché aux points stratégiques :
+
+```java
+// Exemple: Création Patient
+Patient saved = repository.save(patient);
+auditClient.logAction("SYSTEM", "CREATE_PATIENT", saved.getId().toString(), "Patient created");
+
+// Exemple: Lecture Patient
+auditClient.logAction("SYSTEM", "VIEW_PATIENT", id.toString(), "Accessed details");
+```
+
+---
+
+## � Intégration Medical Record Service (Réalisée)
+
+Les dossiers médicaux et consultations sont des données sensibles. Leur accès et modification déclenche désormais des audits blockchain.
+
+### Points d'audit clés
+Dans `MedicalRecordServiceImpl` :
+- `createMedicalRecord` -> `CREATE_MEDICAL_RECORD`
+- `addEntry` -> `ADD_MEDICAL_ENTRY` (Critique pour le suivi des consultations)
+- `getMedicalRecord...` -> `VIEW_MEDICAL_RECORD`
+
+Une attention particulière a été portée à la méthode `addEntry` qui correspond à l'ajout d'une consultation ou d'un acte médical, cœur de la traçabilité médicale.
+
+---
+
+## �🔮 Prochaines étapes
 
 ### Phase 1: Service complet ✅ (Terminé)
 - [x] Créer `AuditController` avec endpoints REST
@@ -592,13 +632,14 @@ Logique métier encapsulant Web3j :
 - [x] Implémenter la lecture et l'écriture sur la Blockchain
 - [x] Gérer les DTOs et le Mapping
 
-### Phase 2: Intégration avec les autres services (En cours)
-- [ ] Modifier `patient-service` pour appeler `audit-service` lors de créations/modifications
-- [ ] Idem pour `consultation-service`
-- [ ] Utiliser `RestTemplate` ou `WebClient` pour l'appel inter-services
+### Phase 2: Intégration avec les autres services ✅ (Terminé)
+- [x] Modifier `patient-service` pour appeler `audit-service`
+- [x] Modifier `medical-record-service` pour appeler `audit-service`
+- [x] Utiliser `RestTemplate` pour l'appel inter-services
 
-### Phase 3: Dashboard et visualisation
-- [ ] Interface web (Angular/React) pour visualiser les audits
+### Phase 3: Dashboard et visualisation (À faire)
+- [ ] Interface web (Angular/React) pour visualiser les logs d'audit
+- [ ] Styles et UX pour le dashboard administrateur
 - [ ] Tableau des logs avec filtres
 - [ ] Page détail d'une transaction
 

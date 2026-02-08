@@ -1,5 +1,6 @@
 package com.hospital.medicalrecord.service.impl;
 
+import com.hospital.medicalrecord.client.AuditClient;
 import com.hospital.medicalrecord.dto.MedicalEntryDTO;
 import com.hospital.medicalrecord.dto.MedicalRecordDTO;
 import com.hospital.medicalrecord.exception.MedicalRecordNotFoundException;
@@ -39,6 +40,7 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     private final MedicalEntryRepository entryRepository;
     private final MedicalRecordMapper recordMapper;
     private final MedicalEntryMapper entryMapper;
+    private final AuditClient auditClient;
 
     @Override
     public MedicalRecordDTO createMedicalRecord(Long patientId) {
@@ -54,6 +56,9 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         MedicalRecord saved = recordRepository.save(record);
         log.info("Medical record created with ID: {}", saved.getId());
 
+        // AUDIT LOG
+        auditClient.logAction(getCurrentUserId(), "CREATE_MEDICAL_RECORD", saved.getId().toString(), "Record created for patient " + patientId);
+
         return recordMapper.toDTO(saved);
     }
 
@@ -62,8 +67,13 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     public Optional<MedicalRecordDTO> getMedicalRecordById(Long id) {
         log.debug("Fetching medical record by ID: {}", id);
         // // Security will be reinforced in Subject 3
-        return recordRepository.findById(id)
+        Optional<MedicalRecordDTO> record = recordRepository.findById(id)
                 .map(recordMapper::toDTO);
+
+        // AUDIT LOG
+        record.ifPresent(r -> auditClient.logAction(getCurrentUserId(), "VIEW_MEDICAL_RECORD", id.toString(), "Accessed record details"));
+        
+        return record;
     }
 
     @Override
@@ -71,8 +81,13 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
     public Optional<MedicalRecordDTO> getMedicalRecordByPatientId(Long patientId) {
         log.debug("Fetching medical record for patient: {}", patientId);
         // // Permissions will be checked in Subject 2
-        return recordRepository.findByPatientId(patientId)
+        Optional<MedicalRecordDTO> record = recordRepository.findByPatientId(patientId)
                 .map(recordMapper::toDTO);
+
+        // AUDIT LOG
+        record.ifPresent(r -> auditClient.logAction(getCurrentUserId(), "VIEW_MEDICAL_RECORD_PATIENT", r.getId().toString(), "Accessed record via Patient ID " + patientId));
+        
+        return record;
     }
 
     @Override
@@ -85,6 +100,9 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
 
         recordMapper.updateEntityFromDTO(recordDTO, existing);
         MedicalRecord updated = recordRepository.save(existing);
+
+        // AUDIT LOG
+        auditClient.logAction(getCurrentUserId(), "UPDATE_MEDICAL_RECORD", id.toString(), "Record updated");
 
         return recordMapper.toDTO(updated);
     }
@@ -101,18 +119,26 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         MedicalEntry entry = entryMapper.toEntity(entryDTO);
         record.addEntry(entry);
 
-        entryRepository.save(entry);
-        log.info("Medical entry added with ID: {}", entry.getId());
+        MedicalEntry savedEntry = entryRepository.save(entry);
+        log.info("Medical entry added with ID: {}", savedEntry.getId());
 
-        return entryMapper.toDTO(entry);
+        // AUDIT LOG (Critical!)
+        auditClient.logAction(getCurrentUserId(), "ADD_MEDICAL_ENTRY", savedEntry.getId().toString(), "Added new entry to record " + record.getId());
+
+        return entryMapper.toDTO(savedEntry);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<MedicalEntryDTO> getEntryById(Long entryId) {
         log.debug("Fetching medical entry: {}", entryId);
-        return entryRepository.findById(entryId)
+        Optional<MedicalEntryDTO> entry = entryRepository.findById(entryId)
                 .map(entryMapper::toDTO);
+
+        // AUDIT LOG
+        entry.ifPresent(e -> auditClient.logAction(getCurrentUserId(), "VIEW_MEDICAL_ENTRY", entryId.toString(), "Accessed specific entry details"));
+        
+        return entry;
     }
 
     @Override
@@ -120,8 +146,16 @@ public class MedicalRecordServiceImpl implements MedicalRecordService {
         log.debug("Getting or creating medical record for patient: {}", patientId);
         
         return recordRepository.findByPatientId(patientId)
-                .map(recordMapper::toDTO)
-                .orElseGet(() -> createMedicalRecord(patientId));
+                .map(r -> {
+                    // Si on le trouve, on log la vue
+                    auditClient.logAction(getCurrentUserId(), "VIEW_MEDICAL_RECORD", r.getId().toString(), "Accessed record (getOrCreate)");
+                    return recordMapper.toDTO(r);
+                })
+                .orElseGet(() -> createMedicalRecord(patientId)); // create va déjà loguer
+    }
+    
+    // Helper to get current user ID
+    private String getCurrentUserId() {
+        return "SYSTEM_USER"; // TODO: Implement SecurityContextHolder
     }
 }
-
