@@ -518,14 +518,14 @@ const AuditLogs = () => {
                                             color: '#60a5fa',
                                             fontSize: '0.9rem'
                                         }}>
-                                            {log.userId}
+                                            {log.userId.substring(0, 10)}...
                                         </td>
                                         <td style={{ padding: '1.125rem 1.25rem' }}>
                                             <span className={`badge ${log.action.includes('CREATE') ? 'badge-green' :
                                                 log.action.includes('DELETE') ? 'badge-red' :
                                                     'badge-blue'
                                                 }`}>
-                                                {log.action}
+                                                {log.action.length > 20 ? log.action.substring(0, 10) + '...' : log.action}
                                             </span>
                                         </td>
                                         <td style={{
@@ -648,13 +648,13 @@ const AuditLogs = () => {
                             </div>
                             <div className="detail-item">
                                 <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Action Type</label>
-                                <span className={`badge ${selectedLog.action.includes('CREATE') ? 'badge-green' : selectedLog.action.includes('DELETE') ? 'badge-red' : 'badge-blue'}`}>
+                                <div className={`badge ${selectedLog.action.includes('CREATE') ? 'badge-green' : selectedLog.action.includes('DELETE') ? 'badge-red' : 'badge-blue'}`} style={{ wordBreak: 'break-all', display: 'inline-block' }}>
                                     {selectedLog.action}
-                                </span>
+                                </div>
                             </div>
                             <div className="detail-item">
                                 <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>User ID (Pseudonymized)</label>
-                                <div style={{ color: '#60a5fa', fontWeight: 600 }}>{selectedLog.userId}</div>
+                                <div style={{ color: '#60a5fa', fontWeight: 600, wordBreak: 'break-all' }}>{selectedLog.userId}</div>
                             </div>
                         </div>
 

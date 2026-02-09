@@ -295,10 +295,10 @@ const Dashboard = () => {
                                         </td>
                                         <td>
                                             <span className={`badge ${log.action.includes('create') ? 'badge-green' : log.action.includes('delete') ? 'badge-red' : 'badge-blue'}`}>
-                                                {log.action}
+                                                {log.action.length > 20 ? log.action.substring(0, 10) + '...' : log.action}
                                             </span>
                                         </td>
-                                        <td className="text-sm">{log.userId}</td>
+                                        <td className="text-sm">{log.userId.substring(0, 10)}...</td>
                                     </tr>
                                 ))}
                             </tbody>

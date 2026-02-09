@@ -116,8 +116,8 @@ public class AuditService {
                         String rawUserId = (topics.size() > 1) ? topics.get(1) : "Unknown";
                         String rawAction = (topics.size() > 2) ? topics.get(2) : "Unknown";
 
-                        dto.setUserId(rawUserId.substring(0, Math.min(rawUserId.length(), 10)) + "..."); // On montre le début du hash
-                        dto.setAction(rawAction.substring(0, Math.min(rawAction.length(), 10)) + "...");
+                        dto.setUserId(rawUserId); // Affichage complet du hash blockchain
+                        dto.setAction(rawAction);
                         
                         if (mixedData.size() >= 2) {
                             dto.setResourceId((String) mixedData.get(0).getValue());
