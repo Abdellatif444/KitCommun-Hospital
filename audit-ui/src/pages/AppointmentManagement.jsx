@@ -44,14 +44,15 @@ const AppointmentManagement = () => {
     };
 
     const fetchDoctors = async () => {
-        const staff = await StaffService.getAllStaff();
-        // Filter only doctors
+        const staff = await StaffService.getAllStaffIncludingInactive();
+        // Filter only doctors (active and inactive)
         const doctors = staff.filter(s => s.role === 'DOCTOR');
         setDoctorsList(doctors);
 
-        // Auto-select first doctor if available
-        if (doctors.length > 0 && !selectedDoctorId) {
-            setSelectedDoctorId(doctors[0].id);
+        // Auto-select first active doctor if available
+        const activeDoctors = doctors.filter(d => d.active !== false);
+        if (activeDoctors.length > 0 && !selectedDoctorId) {
+            setSelectedDoctorId(activeDoctors[0].id);
         }
     };
 
@@ -109,6 +110,36 @@ const AppointmentManagement = () => {
         } catch (error) {
             showNotification(`Erreur: ${error.message}`, "error");
         }
+    };
+
+    // Helper function to get doctor name from ID
+    const getDoctorInfo = (doctorId) => {
+        const doctor = doctorsList.find(d => d.id === doctorId);
+        if (doctor) {
+            const isInactive = doctor.active === false;
+            return (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    Dr. {doctor.lastName} {doctor.firstName} ({doctor.specialty || 'N/A'})
+                    {isInactive && (
+                        <span style={{
+                            background: 'rgba(239, 68, 68, 0.2)',
+                            color: '#ef4444',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '0.25rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 'bold',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                        }}>
+                            ⚠️ INACTIF
+                        </span>
+                    )}
+                </span>
+            );
+        }
+        return `Dr. ID: ${doctorId}`;
     };
 
     // Premium Styles
@@ -427,8 +458,13 @@ const AppointmentManagement = () => {
                                             </div>
                                             <div style={{ color: '#94a3b8', fontSize: '0.85rem' }}>
                                                 <User size={14} style={{ display: 'inline', marginRight: '0.25rem' }} />
-                                                Dr. #{apt.doctorId} • {apt.notes || 'Aucune note'}
+                                                {getDoctorInfo(apt.doctorId)}
                                             </div>
+                                            {apt.notes && (
+                                                <div style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.25rem', fontStyle: 'italic' }}>
+                                                    📝 {apt.notes}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     <div style={{
@@ -457,19 +493,21 @@ const AppointmentManagement = () => {
             </div>
 
             {/* Notification Toast */}
-            {notification && (
-                <div style={{
-                    position: 'fixed', top: '20px', right: '20px', zIndex: 100,
-                    background: '#1e293b', padding: '1rem 1.5rem', borderRadius: '0.75rem',
-                    borderLeft: `4px solid ${notification.type === 'error' ? '#ef4444' : '#10b981'}`,
-                    color: 'white',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
-                }}>
-                    <strong>{notification.type === 'error' ? 'Erreur' : 'Succès'}</strong>
-                    <div>{notification.message}</div>
-                </div>
-            )}
-        </div>
+            {
+                notification && (
+                    <div style={{
+                        position: 'fixed', top: '20px', right: '20px', zIndex: 100,
+                        background: '#1e293b', padding: '1rem 1.5rem', borderRadius: '0.75rem',
+                        borderLeft: `4px solid ${notification.type === 'error' ? '#ef4444' : '#10b981'}`,
+                        color: 'white',
+                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                    }}>
+                        <strong>{notification.type === 'error' ? 'Erreur' : 'Succès'}</strong>
+                        <div>{notification.message}</div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

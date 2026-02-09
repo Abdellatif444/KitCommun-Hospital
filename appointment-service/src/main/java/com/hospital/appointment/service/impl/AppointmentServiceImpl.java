@@ -1,5 +1,6 @@
 package com.hospital.appointment.service.impl;
 
+import com.hospital.appointment.client.AuditClient;
 import com.hospital.appointment.client.PatientClient;
 import com.hospital.appointment.client.StaffClient;
 import com.hospital.appointment.dto.AppointmentCreateRequest;
@@ -46,6 +47,7 @@ public class AppointmentServiceImpl implements AppointmentService {
     private final AppointmentMapper appointmentMapper;
     private final PatientClient patientClient;
     private final StaffClient staffClient;
+    private final AuditClient auditClient;
 
     @Override
     public AppointmentDTO createAppointment(AppointmentCreateRequest request) {
@@ -70,6 +72,10 @@ public class AppointmentServiceImpl implements AppointmentService {
 
         Appointment savedAppointment = appointmentRepository.save(appointment);
         log.info("Appointment created with ID: {}", savedAppointment.getId());
+
+        // Audit logging
+        auditClient.logAction(getCurrentUserId(), "CREATE_APPOINTMENT", savedAppointment.getId().toString(), 
+            "Appointment created for patient " + request.getPatientId() + " with doctor " + request.getDoctorId());
 
         return appointmentMapper.toDTO(savedAppointment);
     }
@@ -133,6 +139,10 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentMapper.updateEntityFromDTO(appointmentDTO, existingAppointment);
         Appointment updatedAppointment = appointmentRepository.save(existingAppointment);
 
+        // Audit logging
+        auditClient.logAction(getCurrentUserId(), "UPDATE_APPOINTMENT", id.toString(), 
+            "Appointment updated");
+
         return appointmentMapper.toDTO(updatedAppointment);
     }
 
@@ -169,6 +179,11 @@ public class AppointmentServiceImpl implements AppointmentService {
         // For now, allow viewing cancelled appointments in history.
         
         appointmentRepository.save(appointment);
+        
+        // Audit logging
+        auditClient.logAction(getCurrentUserId(), "CANCEL_APPOINTMENT", id.toString(), 
+            "Appointment cancelled");
+        
         log.info("Appointment cancelled successfully: {}", id);
     }
 
@@ -204,6 +219,15 @@ public class AppointmentServiceImpl implements AppointmentService {
         if (!Boolean.TRUE.equals(exists)) {
             throw new InvalidAppointmentException("Doctor not found: " + doctorId);
         }
+    }
+
+    /**
+     * Gets current user ID for audit logging.
+     * In production, this would come from SecurityContext.
+     */
+    private String getCurrentUserId() {
+        // TODO: In Subject 2 (Security), extract from Spring SecurityContext
+        return "system";
     }
 }
 

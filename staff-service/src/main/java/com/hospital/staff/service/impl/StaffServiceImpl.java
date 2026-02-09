@@ -1,5 +1,6 @@
 package com.hospital.staff.service.impl;
 
+import com.hospital.staff.client.AuditClient;
 import com.hospital.staff.dto.StaffDTO;
 import com.hospital.staff.exception.DuplicateStaffException;
 import com.hospital.staff.exception.StaffNotFoundException;
@@ -37,6 +38,7 @@ public class StaffServiceImpl implements StaffService {
 
     private final StaffRepository staffRepository;
     private final StaffMapper staffMapper;
+    private final AuditClient auditClient;
 
     @Override
     public StaffDTO createStaff(StaffDTO staffDTO) {
@@ -52,6 +54,10 @@ public class StaffServiceImpl implements StaffService {
         
         Staff savedStaff = staffRepository.save(staff);
         log.info("Staff created with ID: {}", savedStaff.getId());
+
+        // Audit logging
+        auditClient.logAction(getCurrentUserId(), "CREATE_STAFF", savedStaff.getId().toString(), 
+            "Staff member created: " + staffDTO.getEmployeeId() + " (" + staffDTO.getRole() + ")");
 
         return staffMapper.toDTO(savedStaff);
     }
@@ -77,6 +83,16 @@ public class StaffServiceImpl implements StaffService {
     public List<StaffDTO> getAllStaff() {
         log.debug("Fetching all staff");
         // Permissions will be checked in Subject 2
+        return staffRepository.findAll().stream()
+                .filter(staff -> staff.isActive())
+                .map(staffMapper::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StaffDTO> getAllStaffIncludingInactive() {
+        log.debug("Fetching all staff including inactive");
         return staffRepository.findAll().stream()
                 .map(staffMapper::toDTO)
                 .collect(Collectors.toList());
@@ -112,6 +128,10 @@ public class StaffServiceImpl implements StaffService {
         staffMapper.updateEntityFromDTO(staffDTO, existingStaff);
         Staff updatedStaff = staffRepository.save(existingStaff);
         
+        // Audit logging
+        auditClient.logAction(getCurrentUserId(), "UPDATE_STAFF", id.toString(), 
+            "Staff member updated: " + existingStaff.getEmployeeId());
+        
         log.info("Staff updated successfully: {}", id);
         return staffMapper.toDTO(updatedStaff);
     }
@@ -126,6 +146,11 @@ public class StaffServiceImpl implements StaffService {
 
         staff.setActive(false);
         staffRepository.save(staff);
+        
+        // Audit logging
+        auditClient.logAction(getCurrentUserId(), "DEACTIVATE_STAFF", id.toString(), 
+            "Staff member deactivated: " + staff.getEmployeeId());
+        
         log.info("Staff deactivated successfully: {}", id);
     }
 
@@ -133,6 +158,15 @@ public class StaffServiceImpl implements StaffService {
     @Transactional(readOnly = true)
     public boolean existsById(Long id) {
         return staffRepository.existsById(id);
+    }
+
+    /**
+     * Gets current user ID for audit logging.
+     * In production, this would come from SecurityContext.
+     */
+    private String getCurrentUserId() {
+        // TODO: In Subject 2 (Security), extract from Spring SecurityContext
+        return "system";
     }
 }
 

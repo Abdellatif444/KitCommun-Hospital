@@ -301,12 +301,12 @@ const Dashboard = () => {
                             <tbody>
                                 {recentLogs.map((log, i) => {
                                     // Swap logic for Action
-                                    const displayAction = (log.resourceId && (log.resourceId.includes('CREATE') || log.resourceId.includes('UPDATE') || log.resourceId.includes('DELETE')))
+                                    const displayAction = (log.resourceId && (log.resourceId.includes('CREATE') || log.resourceId.includes('UPDATE') || log.resourceId.includes('DELETE') || log.resourceId.includes('DEACTIVATE') || log.resourceId.includes('CANCEL')))
                                         ? log.resourceId
                                         : log.action;
 
                                     // Swap logic for Resource (Hash)
-                                    const displayResource = (log.resourceId && (log.resourceId.includes('CREATE') || log.resourceId.includes('UPDATE') || log.resourceId.includes('DELETE')))
+                                    const displayResource = (log.resourceId && (log.resourceId.includes('CREATE') || log.resourceId.includes('UPDATE') || log.resourceId.includes('DELETE') || log.resourceId.includes('DEACTIVATE') || log.resourceId.includes('CANCEL')))
                                         ? log.action // Valid Hash in swapped case
                                         : log.resourceId;
 

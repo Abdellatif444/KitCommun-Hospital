@@ -44,6 +44,12 @@ public interface StaffService {
     List<StaffDTO> getAllStaff();
 
     /**
+     * Retrieves all staff members including inactive ones.
+     * Used for displaying inactive warnings in appointments.
+     */
+    List<StaffDTO> getAllStaffIncludingInactive();
+
+    /**
      * Retrieves all active staff by role.
      */
     List<StaffDTO> getStaffByRole(StaffRole role);

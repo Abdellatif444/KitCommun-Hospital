@@ -61,6 +61,17 @@ public class StaffController {
     }
 
     /**
+     * Retrieves all staff members including inactive ones.
+     * Used for displaying inactive doctor warnings in appointments.
+     */
+    @GetMapping("/all")
+    public ResponseEntity<List<StaffDTO>> getAllStaffIncludingInactive() {
+        log.info("REST request to get all staff including inactive");
+        List<StaffDTO> staff = staffService.getAllStaffIncludingInactive();
+        return ResponseEntity.ok(staff);
+    }
+
+    /**
      * Retrieves a staff member by ID.
      * This endpoint is mandatory according to the Kit Commun.
      */
