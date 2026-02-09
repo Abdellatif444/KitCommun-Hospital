@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, List, Shield, Settings, Activity, AlertCircle, Link } from 'lucide-react';
+import { Home, List, Shield, Settings, Activity, AlertCircle, Link, Users, UserPlus } from 'lucide-react';
 import AuditService from '../services/AuditService';
 
 const Sidebar = () => {
@@ -67,6 +67,16 @@ const Sidebar = () => {
                     }>
                         <Link size={20} />
                         <span>Blockchain View</span>
+                    </NavLink>
+
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider px-4 mt-8 mb-2">Simulations</div>
+
+                    <NavLink to="/patients-demo" className={({ isActive }) =>
+                        `nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? 'bg-green-500/10 text-green-400 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        }`
+                    }>
+                        <UserPlus size={20} />
+                        <span>Gestion Patients</span>
                     </NavLink>
                 </nav>
             </div>

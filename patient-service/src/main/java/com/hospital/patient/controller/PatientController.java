@@ -31,6 +31,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/patients")
+@CrossOrigin(origins = "*") // Allow frontend access for demo
 @RequiredArgsConstructor
 @Slf4j
 public class PatientController {

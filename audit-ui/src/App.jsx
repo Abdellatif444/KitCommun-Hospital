@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
 import AuditLogs from './pages/AuditLogs';
 import BlockchainView from './pages/BlockchainView';
+import PatientManagement from './pages/PatientManagement';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/logs" element={<AuditLogs />} />
               <Route path="/blockchain" element={<BlockchainView />} />
+              <Route path="/patients-demo" element={<PatientManagement />} />
             </Routes>
           </div>
         </div>
