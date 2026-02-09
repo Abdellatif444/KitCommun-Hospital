@@ -180,8 +180,10 @@ public class PatientServiceImpl implements PatientService {
         return patientRepository.existsById(id);
     }
     
-    // Helper to get current user ID (placeholder for now until Security is implemented)
+    // Helper to get current user ID (Simulation of UUID for Subject 1 compliance)
     private String getCurrentUserId() {
-        return "SYSTEM_USER"; // TODO: Replace with SecurityContextHolder
+        // In Subject 3, this will be extracted from the JWT token.
+        // For Subject 1, we use a technical pseudonym (UUID) to follow security rules.
+        return "u-86f91f24-f3a7-4c4f-9e6b-0b1e83a736a5"; 
     }
 }

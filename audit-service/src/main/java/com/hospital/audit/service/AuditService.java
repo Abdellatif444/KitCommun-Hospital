@@ -40,6 +40,9 @@ public class AuditService {
     }
 
     public String logAction(AuditDto auditDto) throws Exception {
+        // Atelier 1.2.B : Validation du payload (Refuser tout champ sensible)
+        validateNoSensitiveData(auditDto);
+
         logger.info("Envoi de la transaction Audit vers la Blockchain... [User: {}, Action: {}]", 
             auditDto.getUserId(), auditDto.getAction());
 
@@ -151,5 +154,43 @@ public class AuditService {
         return getAllLogs().stream()
             .filter(log -> userId.equals(log.getUserId()))
             .collect(Collectors.toList());
+    }
+
+    /**
+     * Valide qu'aucune donnée sensible n'est envoyée à la blockchain.
+     * Règle de conformité Sujet 1 : Uniquement IDs techniques et Hashes.
+     */
+    private void validateNoSensitiveData(AuditDto dto) {
+        // Liste de vérifications simples pour détecter des données sensibles potentielles
+        checkField("UserId", dto.getUserId());
+        checkField("Action", dto.getAction());
+        checkField("ResourceId", dto.getResourceId());
+        checkField("Details", dto.getDetails());
+    }
+
+    private void checkField(String fieldName, String value) {
+        if (value == null) return;
+        
+        // 1. Détection d'emails (Exigence RGPD)
+        if (value.contains("@")) {
+            throw new IllegalArgumentException("SENSITIVE DATA REJECTED: Field " + fieldName + " contains an email address!");
+        }
+
+        // 2. Détection de noms complets probables (espaces multiples ou majuscules suivies de minuscules)
+        // Les IDs techniques (UUID, Long) n'ont généralement pas d'espaces.
+        if (value.trim().contains(" ")) {
+            // On autorise les "Action" avec espaces si c'est court, mais pas les détails trop longs
+            if (fieldName.equals("UserId") || fieldName.equals("ResourceId")) {
+                 throw new IllegalArgumentException("SENSITIVE DATA REJECTED: Field " + fieldName + " must be a technical ID (no spaces sanctioned)!");
+            }
+        }
+        
+        // 3. Détection de pattern de diagnostic (mots clés médicaux)
+        String[] sensitiveKeywords = {"cancer", "fracture", "diabete", "positif", "negatif", "tension"};
+        for (String keyword : sensitiveKeywords) {
+            if (value.toLowerCase().contains(keyword)) {
+                throw new IllegalArgumentException("SENSITIVE DATA REJECTED: Field " + fieldName + " contains medical information!");
+            }
+        }
     }
 }

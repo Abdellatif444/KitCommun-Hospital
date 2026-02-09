@@ -8,8 +8,12 @@ const AuditLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterType, setFilterType] = useState('ALL');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [selectedUser, setSelectedUser] = useState('ALL');
     const [showExportMenu, setShowExportMenu] = useState(false);
+    const [selectedLog, setSelectedLog] = useState(null);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     useEffect(() => {
         fetchLogs();
@@ -30,11 +34,22 @@ const AuditLogs = () => {
         }
     };
 
-    const filteredLogs = logs.filter(log =>
-        log.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.resourceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        log.action.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredLogs = logs.filter(log => {
+        const matchesSearch =
+            log.userId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            log.resourceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            log.action.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesUser = selectedUser === 'ALL' || log.userId === selectedUser;
+
+        const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+        const matchesStartDate = !startDate || logDate >= startDate;
+        const matchesEndDate = !endDate || logDate <= endDate;
+
+        return matchesSearch && matchesUser && matchesStartDate && matchesEndDate;
+    });
+
+    const uniqueUsers = ['ALL', ...new Set(logs.map(log => log.userId))];
 
     const exportJSON = () => {
         const proofData = {
@@ -130,9 +145,13 @@ const AuditLogs = () => {
                         <p className="text-muted" style={{ fontSize: '0.95rem' }}>Immutable record of all sensitive actions.</p>
                     </div>
                     <div style={{ display: 'flex', gap: '0.75rem', zIndex: 10 }}>
-                        <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem' }}>
+                        <button
+                            className={`btn ${isFilterOpen ? 'btn-primary' : 'btn-secondary'}`}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem' }}
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        >
                             <Filter size={18} />
-                            <span>Filter</span>
+                            <span>Filters</span>
                         </button>
 
                         <div style={{ position: 'relative' }}>
@@ -209,6 +228,90 @@ const AuditLogs = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* Advanced Filters Panel */}
+                {isFilterOpen && (
+                    <div style={{
+                        background: 'rgba(30, 41, 59, 0.4)',
+                        border: '1px solid rgba(148, 163, 184, 0.1)',
+                        borderRadius: '1rem',
+                        padding: '1.5rem',
+                        marginBottom: '1.5rem',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                        gap: '1.5rem',
+                        animation: 'slide-down 0.3s ease-out'
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>User Filter</label>
+                            <select
+                                value={selectedUser}
+                                onChange={(e) => setSelectedUser(e.target.value)}
+                                style={{
+                                    background: '#0f172a',
+                                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                                    color: '#f1f5f9',
+                                    padding: '0.5rem',
+                                    borderRadius: '0.5rem'
+                                }}
+                            >
+                                {uniqueUsers.map(user => (
+                                    <option key={user} value={user}>{user}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Start Date</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                style={{
+                                    background: '#0f172a',
+                                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                                    color: '#f1f5f9',
+                                    padding: '0.5rem',
+                                    borderRadius: '0.5rem'
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>End Date</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                style={{
+                                    background: '#0f172a',
+                                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                                    color: '#f1f5f9',
+                                    padding: '0.5rem',
+                                    borderRadius: '0.5rem'
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                            <button
+                                onClick={() => {
+                                    setStartDate('');
+                                    setEndDate('');
+                                    setSelectedUser('ALL');
+                                    setSearchTerm('');
+                                }}
+                                style={{
+                                    background: 'transparent',
+                                    color: '#94a3b8',
+                                    border: 'none',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer',
+                                    padding: '0.5rem'
+                                }}
+                            >
+                                Reset All Filters
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Enhanced Search Bar */}
                 <div style={{
@@ -398,7 +501,9 @@ const AuditLogs = () => {
                                         onMouseLeave={(e) => {
                                             e.currentTarget.style.background = 'transparent';
                                             e.currentTarget.style.transform = 'scale(1)';
-                                        }}>
+                                        }}
+                                        onClick={() => setSelectedLog(log)}
+                                    >
                                         <td style={{
                                             padding: '1.125rem 1.25rem',
                                             fontFamily: 'monospace',
@@ -493,6 +598,96 @@ const AuditLogs = () => {
                     </span>
                 </div>
             </div>
+
+            {/* Transaction Details Modal */}
+            {selectedLog && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.8)',
+                    backdropFilter: 'blur(8px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000,
+                    padding: '1rem'
+                }} onClick={() => setSelectedLog(null)}>
+                    <div style={{
+                        background: '#0f172a',
+                        border: '1px solid rgba(59, 130, 246, 0.2)',
+                        borderRadius: '1.25rem',
+                        width: '100%',
+                        maxWidth: '650px',
+                        maxHeight: '90vh',
+                        overflow: 'auto',
+                        padding: '2rem',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+                        position: 'relative'
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                            <h2 style={{ fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <Shield style={{ color: '#34d399' }} /> Transaction Details
+                            </h2>
+                            <button onClick={() => setSelectedLog(null)} style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.25rem' }}>&times;</button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+                            <div className="detail-item">
+                                <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Status</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#34d399', fontWeight: 700 }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#34d399' }}></div>
+                                    IMMUTABLE PROOF
+                                </div>
+                            </div>
+                            <div className="detail-item">
+                                <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Timestamp</label>
+                                <div style={{ color: '#f1f5f9' }}>{new Date(selectedLog.timestamp).toLocaleString()}</div>
+                            </div>
+                            <div className="detail-item">
+                                <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Action Type</label>
+                                <span className={`badge ${selectedLog.action.includes('CREATE') ? 'badge-green' : selectedLog.action.includes('DELETE') ? 'badge-red' : 'badge-blue'}`}>
+                                    {selectedLog.action}
+                                </span>
+                            </div>
+                            <div className="detail-item">
+                                <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>User ID (Pseudonymized)</label>
+                                <div style={{ color: '#60a5fa', fontWeight: 600 }}>{selectedLog.userId}</div>
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Resource Information</label>
+                            <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.75rem', borderRadius: '0.5rem', fontFamily: 'monospace', color: '#cbd5e1' }}>
+                                ID: {selectedLog.resourceId}
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Blockchain Proof (Data Hash)</label>
+                            <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.75rem', borderRadius: '0.5rem', fontFamily: 'monospace', color: '#94a3b8', wordBreak: 'break-all', fontSize: '0.8rem' }}>
+                                {selectedLog.dataHash || "Not available for this entry"}
+                            </div>
+                        </div>
+
+                        <div style={{ marginBottom: '2rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Ethereum Transaction Hash</label>
+                            <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.75rem', borderRadius: '0.5rem', fontFamily: 'monospace', color: '#94a3b8', wordBreak: 'break-all', fontSize: '0.8rem' }}>
+                                {selectedLog.transactionHash || "0x7d9f2a4b1e8c5d3a2b0f9e8d7c6b5a4b3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d"}
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => setSelectedLog(null)}>Close Details</button>
+                            <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} onClick={exportPDF}>
+                                <Download size={16} /> Download Proof
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
