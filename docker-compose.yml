@@ -261,6 +261,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-medical-records:5432/hospital_medical_records
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - AUDIT_SERVICE_URL=http://audit-service:8083
     depends_on:
       discovery-service:
         condition: service_healthy

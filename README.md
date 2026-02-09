@@ -171,6 +171,14 @@ Base URL: `http://localhost:8080`
 | Staff | `/api/staff` | CRUD Personnel |
 | Appointments | `/api/appointments` | CRUD Rendez-vous |
 | Medical Records | `/api/medical-records` | Dossiers médicaux |
+| Audit (UI) | `http://localhost:5173` | Dashboard Blockchain |
+
+---
+
+## 🛡️ Sujet 1 : Blockchain & Audit
+La documentation complète de l'implémentation Blockchain est disponible ici :
+- **[Rapport de Complétion Sujet 1](./DOCUMENTATION_COMPLETION_SUJET1.md)**
+- **[Guide Mise en œuvre Audit](./DOCUMENTATION_AUDIT_UI.md)**
 
 ---
 
