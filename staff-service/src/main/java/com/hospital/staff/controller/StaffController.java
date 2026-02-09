@@ -30,6 +30,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/staff")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class StaffController {

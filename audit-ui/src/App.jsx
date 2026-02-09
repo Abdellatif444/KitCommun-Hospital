@@ -4,6 +4,8 @@ import Dashboard from './pages/Dashboard';
 import AuditLogs from './pages/AuditLogs';
 import BlockchainView from './pages/BlockchainView';
 import PatientManagement from './pages/PatientManagement';
+import AppointmentManagement from './pages/AppointmentManagement'; // Import appointment component
+import StaffManagement from './pages/StaffManagement';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
               <Route path="/logs" element={<AuditLogs />} />
               <Route path="/blockchain" element={<BlockchainView />} />
               <Route path="/patients-demo" element={<PatientManagement />} />
+              <Route path="/appointments-demo" element={<AppointmentManagement />} /> {/* New Route */}
+              <Route path="/staff-demo" element={<StaffManagement />} />
             </Routes>
           </div>
         </div>

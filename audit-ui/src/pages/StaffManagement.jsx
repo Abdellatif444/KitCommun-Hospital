@@ -1,30 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, Edit, Trash2, Plus, RefreshCw, X, Zap, CheckCircle, Shield } from 'lucide-react';
-import PatientService from '../services/PatientService';
+import { UserCheck, Edit, Trash2, Plus, RefreshCw, X, Zap, CheckCircle, Shield, Briefcase, Stethoscope } from 'lucide-react';
+import StaffService from '../services/StaffService';
 
-const PatientManagement = () => {
-    const [patients, setPatients] = useState([]);
+const StaffManagement = () => {
+    const [staffList, setStaffList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
     const [notification, setNotification] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
 
-    // Form data with ALL required fields
+    // Form data
     const [formData, setFormData] = useState({
-        uuid: '',
+        employeeId: '',
         firstName: '',
         lastName: '',
         email: '',
-        nationalId: '', // Required
-        dateOfBirth: '', // Required
-        gender: 'MALE', // Required
-        address: '',
-        phoneNumber: ''
+        phoneNumber: '',
+        role: 'DOCTOR',
+        specialty: 'GENERAL_MEDICINE'
     });
 
+    const roles = ['DOCTOR', 'NURSE', 'ADMIN', 'RECEPTIONIST'];
+    const specialties = ['GENERAL_MEDICINE', 'CARDIOLOGY', 'PEDIATRICS', 'SURGERY', 'No Specialty'];
+
     useEffect(() => {
-        loadPatients();
+        loadStaff();
     }, []);
 
     const showNotification = (message, type = 'success') => {
@@ -32,11 +32,11 @@ const PatientManagement = () => {
         setTimeout(() => setNotification(null), 3000);
     };
 
-    const loadPatients = async () => {
+    const loadStaff = async () => {
         setLoading(true);
         try {
-            const data = await PatientService.getAllPatients();
-            setPatients(data);
+            const data = await StaffService.getAllStaff();
+            setStaffList(data);
         } catch (error) {
             console.error("Erreur chargement:", error);
         } finally {
@@ -44,83 +44,53 @@ const PatientManagement = () => {
         }
     };
 
-    const generateRandomPatient = async () => {
+    const generateRandomDoctor = async () => {
         setIsProcessing(true);
-        const randomNames = ['Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Frank', 'Grace'];
-        const randomLastNames = ['Smith', 'Doe', 'Johnson', 'Brown', 'Taylor', 'Miller'];
+        const randomNames = ['John', 'Lisa', 'Mark', 'Sarah', 'Paul', 'Emily'];
+        const randomLastNames = ['House', 'Cuddy', 'Wilson', 'Chase', 'Cameron', 'Foreman'];
+        const specialtiesList = ['CARDIOLOGY', 'NEUROLOGY', 'ONCOLOGY', 'DIAGNOSTICS'];
 
         const randomName = randomNames[Math.floor(Math.random() * randomNames.length)];
         const randomLast = randomLastNames[Math.floor(Math.random() * randomLastNames.length)];
-        // Generate random DOB
-        const year = 1970 + Math.floor(Math.random() * 30);
-        const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-        const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+        const randomSpecialty = specialtiesList[Math.floor(Math.random() * specialtiesList.length)];
+        const empId = `EMP-${Date.now().toString().slice(-6)}`;
 
-        const newPatient = {
+        const newDoctor = {
+            employeeId: empId,
             firstName: randomName,
             lastName: randomLast,
-            email: `${randomName.toLowerCase()}.${randomLast.toLowerCase()}@example.com`,
-            nationalId: `XYZ${Math.floor(100000 + Math.random() * 900000)}`,
-            dateOfBirth: `${year}-${month}-${day}`,
-            gender: Math.random() > 0.5 ? 'MALE' : 'FEMALE',
-            address: `${Math.floor(Math.random() * 100)} Rue de la Paix`,
-            phoneNumber: `+336${Math.floor(10000000 + Math.random() * 90000000)}`
+            email: `${randomName.toLowerCase()}.${randomLast.toLowerCase()}@ppth.com`,
+            phoneNumber: `555-${Math.floor(1000 + Math.random() * 9000)}`,
+            role: 'DOCTOR',
+            specialty: randomSpecialty
         };
 
         try {
-            const created = await PatientService.createPatient(newPatient); // Capture response
-            showNotification(`Patient ${created.firstName} ${created.lastName} créé (ID: ${created.id}) ! Preuve Blockchain générée.`, "success");
-            await loadPatients();
+            await StaffService.createStaff(newDoctor);
+            showNotification(`Dr. ${newDoctor.lastName} créé avec succès !`, "success");
+            await loadStaff();
         } catch (error) {
-            console.error(error);
-            showNotification(`${error.message}`, "error");
+            showNotification(`Erreur: ${error.message}`, "error");
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const handleOpenModal = (user = null) => {
-        if (user) {
-            setCurrentUser(user);
-            // Format date if it comes as array [yyyy, mm, dd] or string
-            let formattedDob = user.dateOfBirth;
-            if (Array.isArray(user.dateOfBirth)) {
-                const [y, m, d] = user.dateOfBirth;
-                formattedDob = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            }
-
-            setFormData({
-                ...user,
-                dateOfBirth: formattedDob,
-                // Ensure gender is valid enum if missing
-                gender: user.gender || 'MALE',
-                nationalId: user.nationalId || `ID-${Math.floor(100000 + Math.random() * 900000)}` // Fallback if missing
-            });
-        } else {
-            setCurrentUser(null);
-            // Pre-fill required fields with random data for manual creation too (for ease of use)
-            const year = 1980 + Math.floor(Math.random() * 20);
-            const month = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-            const day = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
-
-            setFormData({
-                uuid: crypto.randomUUID(),
-                firstName: '',
-                lastName: '',
-                email: '',
-                nationalId: `ID-${Math.floor(100000 + Math.random() * 900000)}`,
-                dateOfBirth: `${year}-${month}-${day}`,
-                gender: 'MALE',
-                address: '123 Test St',
-                phoneNumber: '0600000000'
-            });
-        }
+    const handleOpenModal = () => {
+        setFormData({
+            employeeId: `EMP-${Date.now().toString().slice(-6)}`,
+            firstName: '',
+            lastName: '',
+            email: '',
+            phoneNumber: '',
+            role: 'DOCTOR',
+            specialty: 'GENERAL_MEDICINE'
+        });
         setShowModal(true);
     };
 
     const handleCloseModal = () => {
         setShowModal(false);
-        setFormData({ uuid: '', firstName: '', lastName: '', email: '', nationalId: '', dateOfBirth: '', gender: 'MALE', address: '', phoneNumber: '' });
     };
 
     const handleChange = (e) => {
@@ -132,30 +102,24 @@ const PatientManagement = () => {
         e.preventDefault();
         setIsProcessing(true);
         try {
-            if (currentUser) {
-                await PatientService.updatePatient(currentUser.id || currentUser.uuid, formData); // Ensure ID is used
-                showNotification(`Patient ${formData.firstName} ${formData.lastName} mis à jour (ID: ${currentUser.id}) !`, "success");
-            } else {
-                const created = await PatientService.createPatient(formData);
-                showNotification(`Patient ${created.firstName} ${created.lastName} créé (ID: ${created.id}) ! ID Blockchain: ${created.id}`, "success");
-            }
-            await loadPatients();
+            await StaffService.createStaff(formData);
+            showNotification(`Personnel ${formData.firstName} ${formData.lastName} ajouté !`, "success");
+            await loadStaff();
             handleCloseModal();
         } catch (error) {
-            console.error(error);
-            showNotification(`${error.message}`, "error");
+            showNotification(`Erreur: ${error.message}`, "error");
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const handleDelete = async (uuid) => {
-        if (window.confirm('Confirmer suppression ? Cela créera un log immuable DELETE.')) {
+    const handleDelete = async (id) => {
+        if (window.confirm('Confirmer la désactivation de ce membre du personnel ?')) {
             setIsProcessing(true);
             try {
-                await PatientService.deletePatient(uuid);
-                showNotification("Patient supprimé. Preuve générée.", "success");
-                await loadPatients();
+                await StaffService.deactivateStaff(id);
+                showNotification("Personnel désactivé.", "success");
+                await loadStaff();
             } catch (error) {
                 alert("Erreur lors de la suppression");
             } finally {
@@ -164,7 +128,7 @@ const PatientManagement = () => {
         }
     };
 
-    // Styles constants extracted from AuditLogs.jsx for consistency
+    // Styles constants
     const cardStyle = {
         background: 'rgba(30, 41, 59, 0.7)',
         backdropFilter: 'blur(12px)',
@@ -213,25 +177,25 @@ const PatientManagement = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
                     <h1 style={{ fontSize: '1.875rem', fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <Shield style={{ color: '#3b82f6' }} size={32} />
-                        Simulateur Transactions
+                        <Briefcase style={{ color: '#3b82f6' }} size={32} />
+                        Gestion Personnel (Staff)
                     </h1>
                     <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>
-                        Générez des opérations CRUD pour voir la magie de la Blockchain.
+                        Gérez les médecins, infirmiers et administrateurs du système hospitalier.
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button
-                        onClick={generateRandomPatient}
+                        onClick={generateRandomDoctor}
                         style={buttonStyle('blue')}
                         disabled={isProcessing}
                     >
-                        <Zap size={18} /> {isProcessing ? 'Génération...' : 'Génération Rapide'}
+                        <Zap size={18} /> {isProcessing ? 'Génération...' : 'Génération Aléatoire'}
                     </button>
-                    <button onClick={() => handleOpenModal()} style={buttonStyle('green')}>
-                        <Plus size={18} /> Nouveau Patient
+                    <button onClick={handleOpenModal} style={buttonStyle('green')}>
+                        <Plus size={18} /> Nouveau Membre
                     </button>
-                    <button onClick={loadPatients} style={buttonStyle('gray')}>
+                    <button onClick={loadStaff} style={buttonStyle('gray')}>
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                     </button>
                 </div>
@@ -242,13 +206,14 @@ const PatientManagement = () => {
                 <div style={{
                     position: 'fixed', top: '20px', right: '20px', zIndex: 100,
                     background: '#1e293b', padding: '1rem 1.5rem', borderRadius: '0.75rem',
-                    borderLeft: '4px solid #10b981', color: 'white',
+                    borderLeft: `4px solid ${notification.type === 'error' ? '#ef4444' : '#10b981'}`,
+                    color: 'white',
                     display: 'flex', alignItems: 'center', gap: '1rem',
                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
                 }}>
-                    <CheckCircle color="#10b981" size={24} />
+                    <CheckCircle color={notification.type === 'error' ? '#ef4444' : '#10b981'} size={24} />
                     <div>
-                        <div style={{ fontWeight: 'bold' }}>{notification.type === 'error' ? 'Erreur' : 'Transaction Émise'}</div>
+                        <div style={{ fontWeight: 'bold' }}>{notification.type === 'error' ? 'Erreur' : 'Succès'}</div>
                         <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>{notification.message}</div>
                     </div>
                 </div>
@@ -259,50 +224,66 @@ const PatientManagement = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                         <tr style={{ background: 'rgba(15, 23, 42, 0.3)' }}>
-                            <th style={headerCellStyle}>ID / UUID</th>
+                            <th style={headerCellStyle}>ID / Role</th>
                             <th style={headerCellStyle}>Identité</th>
+                            <th style={headerCellStyle}>Spécialité</th>
                             <th style={headerCellStyle}>Contact</th>
                             <th style={{ ...headerCellStyle, textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Chargement...</td></tr>
-                        ) : patients.length === 0 ? (
+                            <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Chargement...</td></tr>
+                        ) : staffList.length === 0 ? (
                             <tr>
-                                <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
-                                    Aucune donnée. Utilisez le bouton "Génération Rapide".
+                                <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                                    Aucun personnel trouvé. Utilisez le bouton "Génération Aléatoire".
                                 </td>
                             </tr>
                         ) : (
-                            patients.map(patient => (
-                                <tr key={patient.uuid || patient.id} style={{ transition: 'background 0.2s' }}
+                            staffList.map(staff => (
+                                <tr key={staff.id} style={{ transition: 'background 0.2s' }}
                                     onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)'}
                                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                                 >
                                     <td style={{ ...cellStyle, fontFamily: 'monospace' }}>
-                                        <div style={{ color: '#f1f5f9', fontWeight: 600 }}>ID: {patient.id}</div>
-                                        <div style={{ color: '#64748b', fontSize: '0.75rem' }}>
-                                            {patient.uuid ? patient.uuid.substring(0, 8) + '...' : ''}
+                                        <div style={{ color: '#f1f5f9', fontWeight: 600 }}>ID: {staff.id}</div>
+                                        <div style={{
+                                            color: staff.role === 'DOCTOR' ? '#60a5fa' : '#94a3b8',
+                                            fontSize: '0.7rem',
+                                            fontWeight: 700,
+                                            background: staff.role === 'DOCTOR' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(148, 163, 184, 0.1)',
+                                            padding: '2px 6px',
+                                            borderRadius: '4px',
+                                            width: 'fit-content',
+                                            marginTop: '4px'
+                                        }}>
+                                            {staff.role}
                                         </div>
                                     </td>
                                     <td style={{ ...cellStyle, fontWeight: 600, color: 'white' }}>
-                                        {patient.lastName.toUpperCase()} {patient.firstName}
+                                        {staff.lastName.toUpperCase()} {staff.firstName}
                                     </td>
-                                    <td style={{ ...cellStyle, color: '#cbd5e1' }}>
-                                        {patient.email}
+                                    <td style={{ ...cellStyle, color: '#e2e8f0' }}>
+                                        {staff.specialty ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Stethoscope size={14} color="#10b981" />
+                                                {staff.specialty}
+                                            </div>
+                                        ) : (
+                                            <span style={{ color: '#64748b' }}>-</span>
+                                        )}
+                                    </td>
+                                    <td style={{ ...cellStyle, color: '#cbd5e1', fontSize: '0.85rem' }}>
+                                        <div>{staff.email}</div>
+                                        <div style={{ color: '#64748b' }}>{staff.phoneNumber}</div>
                                     </td>
                                     <td style={{ ...cellStyle, textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                                             <button
-                                                onClick={() => handleOpenModal(patient)}
-                                                style={{ padding: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }}
-                                            >
-                                                <Edit size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(patient.id || patient.uuid)} // Use ID for delete
+                                                onClick={() => handleDelete(staff.id)}
                                                 style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }}
+                                                title="Désactiver"
                                             >
                                                 <Trash2 size={16} />
                                             </button>
@@ -327,41 +308,62 @@ const PatientManagement = () => {
                     }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
                             <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white' }}>
-                                {currentUser ? 'Modifier Patient' : 'Nouveau Patient'}
+                                Nouveau Membre Personnel
                             </h2>
                             <button onClick={handleCloseModal} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}><X /></button>
                         </div>
 
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {/* Only show simplified form for demo, but submit all required defaults */}
-                            <div style={{ marginBottom: '1rem', padding: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', fontSize: '0.75rem', color: '#94a3b8' }}>
-                                Note: Les champs techniques (National ID, DOB) sont auto-générés pour cette démo.
+                            <div>
+                                <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Matricule Employé</label>
+                                <input required name="employeeId" value={formData.employeeId} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} placeholder="EMP-XXXX" />
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                                 <div>
                                     <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Prénom</label>
-                                    <input required name="firstName" value={formData.firstName} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} placeholder="Ex: Jean" />
+                                    <input required name="firstName" value={formData.firstName} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} />
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Nom</label>
-                                    <input required name="lastName" value={formData.lastName} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} placeholder="Ex: Dupont" />
+                                    <input required name="lastName" value={formData.lastName} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} />
                                 </div>
                             </div>
+
                             <div>
                                 <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Email</label>
-                                <input required type="email" name="email" value={formData.email} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} placeholder="jean@exemple.com" />
+                                <input required type="email" name="email" value={formData.email} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} />
                             </div>
 
-                            {/* Hidden inputs for mandatory fields logic */}
-                            <input type="hidden" name="nationalId" value={formData.nationalId} />
-                            <input type="hidden" name="dateOfBirth" value={formData.dateOfBirth} />
+                            <div>
+                                <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Téléphone</label>
+                                <input required name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white' }} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                    <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Rôle</label>
+                                    <select name="role" value={formData.role} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white', cursor: 'pointer' }}>
+                                        {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: '#cbd5e1', fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.5rem' }}>Spécialité</label>
+                                    <select name="specialty" value={formData.specialty} onChange={handleChange} style={{ width: '100%', padding: '0.75rem', background: '#334155', border: '1px solid #475569', borderRadius: '0.5rem', color: 'white', cursor: 'pointer' }} disabled={formData.role !== 'DOCTOR'}>
+                                        {formData.role === 'DOCTOR' ? (
+                                            specialties.map(s => <option key={s} value={s}>{s}</option>)
+                                        ) : (
+                                            <option value="">N/A</option>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                                 <button type="button" onClick={handleCloseModal} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: '#475569', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
                                 <button type="submit" disabled={isProcessing} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     {isProcessing ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle size={18} />}
-                                    {currentUser ? 'Enregistrer' : 'Créer'}
+                                    Créer
                                 </button>
                             </div>
                         </form>
@@ -372,4 +374,4 @@ const PatientManagement = () => {
     );
 };
 
-export default PatientManagement;
+export default StaffManagement;

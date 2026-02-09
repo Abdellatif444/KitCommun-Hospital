@@ -106,7 +106,7 @@ public class PatientServiceImpl implements PatientService {
         
         // AUDIT LOG (listing)
         // Note: Listing might generate too many logs if we log each item. We log the action instead.
-        auditClient.logAction(getCurrentUserId(), "LIST_PATIENTS", "ALL", "Listed all active patients. Count: " + patients.size());
+        // auditClient.logAction(getCurrentUserId(), "LIST_PATIENTS", "ALL", "Listed all active patients. Count: " + patients.size());
         
         return patients;
     }

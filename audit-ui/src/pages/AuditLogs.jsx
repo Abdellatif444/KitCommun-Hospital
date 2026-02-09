@@ -24,7 +24,8 @@ const AuditLogs = () => {
             setLoading(true);
             const data = await AuditService.getAllLogs();
             if (data) {
-                setLogs(data);
+                // Sort by timestamp descending (Newest first)
+                setLogs(data.sort((a, b) => b.timestamp - a.timestamp));
             }
         } catch (error) {
             console.error("Failed to load logs from backend", error);
@@ -521,11 +522,14 @@ const AuditLogs = () => {
                                             {log.userId.substring(0, 10)}...
                                         </td>
                                         <td style={{ padding: '1.125rem 1.25rem' }}>
-                                            <span className={`badge ${log.action.includes('CREATE') ? 'badge-green' :
-                                                log.action.includes('DELETE') ? 'badge-red' :
+                                            <span className={`badge ${((log.resourceId && log.resourceId.includes('CREATE')) || log.action.includes('CREATE')) ? 'badge-green' :
+                                                ((log.resourceId && log.resourceId.includes('DELETE')) || log.action.includes('DELETE')) ? 'badge-red' :
                                                     'badge-blue'
                                                 }`}>
-                                                {log.action.length > 20 ? log.action.substring(0, 10) + '...' : log.action}
+                                                {/* Bugfix: Swap logic */}
+                                                {(log.resourceId && (log.resourceId.startsWith('CREATE') || log.resourceId.startsWith('DELETE') || log.resourceId.startsWith('UPDATE')))
+                                                    ? log.resourceId
+                                                    : (log.action.length > 20 ? log.action.substring(0, 10) + '...' : log.action)}
                                             </span>
                                         </td>
                                         <td style={{
@@ -534,7 +538,9 @@ const AuditLogs = () => {
                                             fontSize: '0.875rem',
                                             color: '#cbd5e1'
                                         }}>
-                                            {log.resourceId}
+                                            {(log.resourceId && (log.resourceId.startsWith('CREATE') || log.resourceId.startsWith('DELETE') || log.resourceId.startsWith('UPDATE')))
+                                                ? (log.action.startsWith('0x') ? 'Hash: ' + log.action.substring(0, 10) + '...' : log.action)
+                                                : log.resourceId}
                                         </td>
                                         <td style={{
                                             padding: '1.125rem 1.25rem',
@@ -648,8 +654,13 @@ const AuditLogs = () => {
                             </div>
                             <div className="detail-item">
                                 <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Action Type</label>
-                                <div className={`badge ${selectedLog.action.includes('CREATE') ? 'badge-green' : selectedLog.action.includes('DELETE') ? 'badge-red' : 'badge-blue'}`} style={{ wordBreak: 'break-all', display: 'inline-block' }}>
-                                    {selectedLog.action}
+                                <div className={`badge ${(selectedLog.resourceId && selectedLog.resourceId.includes('CREATE')) || selectedLog.action.includes('CREATE') ? 'badge-green' :
+                                    (selectedLog.resourceId && selectedLog.resourceId.includes('DELETE')) || selectedLog.action.includes('DELETE') ? 'badge-red' :
+                                        'badge-blue'}`} style={{ wordBreak: 'break-all', display: 'inline-block' }}>
+                                    {/* Bugfix: Swap logic */}
+                                    {selectedLog.resourceId && (selectedLog.resourceId.startsWith('CREATE') || selectedLog.resourceId.startsWith('UPDATE') || selectedLog.resourceId.startsWith('DELETE'))
+                                        ? selectedLog.resourceId
+                                        : selectedLog.action}
                                 </div>
                             </div>
                             <div className="detail-item">
@@ -661,7 +672,9 @@ const AuditLogs = () => {
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{ display: 'block', fontSize: '0.7rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.4rem' }}>Resource Information</label>
                             <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '0.75rem', borderRadius: '0.5rem', fontFamily: 'monospace', color: '#cbd5e1' }}>
-                                ID: {selectedLog.resourceId}
+                                ID: {selectedLog.resourceId && (selectedLog.resourceId.startsWith('CREATE') || selectedLog.resourceId.startsWith('UPDATE') || selectedLog.resourceId.startsWith('DELETE'))
+                                    ? (selectedLog.action.startsWith('0x') ? 'Hash: ' + selectedLog.action : selectedLog.action)
+                                    : selectedLog.resourceId}
                             </div>
                         </div>
 

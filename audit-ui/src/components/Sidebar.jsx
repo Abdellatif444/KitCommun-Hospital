@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, List, Shield, Settings, Activity, AlertCircle, Link, Users, UserPlus } from 'lucide-react';
+import { Home, List, Shield, Settings, Activity, AlertCircle, Link, Users, UserPlus, Calendar, Briefcase } from 'lucide-react';
 import AuditService from '../services/AuditService';
 
 const Sidebar = () => {
@@ -77,6 +77,22 @@ const Sidebar = () => {
                     }>
                         <UserPlus size={20} />
                         <span>Gestion Patients</span>
+                    </NavLink>
+
+                    <NavLink to="/appointments-demo" className={({ isActive }) =>
+                        `nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? 'bg-purple-500/10 text-purple-400 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        }`
+                    }>
+                        <Calendar size={20} />
+                        <span>Consultations (Démo)</span>
+                    </NavLink>
+
+                    <NavLink to="/staff-demo" className={({ isActive }) =>
+                        `nav-link flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${isActive ? 'bg-cyan-500/10 text-cyan-400 font-medium' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        }`
+                    }>
+                        <Briefcase size={20} />
+                        <span>Gestion Personnel</span>
                     </NavLink>
                 </nav>
             </div>

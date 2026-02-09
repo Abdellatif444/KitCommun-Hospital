@@ -11,7 +11,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { Activity, ShieldCheck, Users, Database } from 'lucide-react';
+import { Activity, ShieldCheck, Users, Database, Copy, Check } from 'lucide-react';
 
 ChartJS.register(
     CategoryScale,
@@ -26,6 +26,14 @@ ChartJS.register(
 const Dashboard = () => {
     const [stats, setStats] = useState({ total: 0, byUser: 0, byPatient: 0 });
     const [recentLogs, setRecentLogs] = useState([]);
+    const [expandedResources, setExpandedResources] = useState(new Set());
+    const [copiedIndex, setCopiedIndex] = useState(null);
+
+    const handleCopy = (text, index) => {
+        navigator.clipboard.writeText(text);
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
+    };
 
     const [chartData, setChartData] = useState({
         labels: [],
@@ -41,7 +49,9 @@ const Dashboard = () => {
                 byUser: new Set(data.map(l => l.userId)).size,
                 byPatient: new Set(data.map(l => l.resourceId)).size // Approx
             });
-            setRecentLogs(data.slice(0, 5));
+            // Sort by timestamp descending (Newest first)
+            const sortedData = [...data].sort((a, b) => b.timestamp - a.timestamp);
+            setRecentLogs(sortedData.slice(0, 5));
 
             // Process chart data (last 7 days activity)
             const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -284,23 +294,81 @@ const Dashboard = () => {
                                 <tr>
                                     <th>Time</th>
                                     <th>Action</th>
+                                    <th>Resource</th>
                                     <th>User</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {recentLogs.map((log, i) => (
-                                    <tr key={i}>
-                                        <td className="text-xs text-muted">
-                                            {new Date(log.timestamp).toLocaleTimeString()}
-                                        </td>
-                                        <td>
-                                            <span className={`badge ${log.action.includes('create') ? 'badge-green' : log.action.includes('delete') ? 'badge-red' : 'badge-blue'}`}>
-                                                {log.action.length > 20 ? log.action.substring(0, 10) + '...' : log.action}
-                                            </span>
-                                        </td>
-                                        <td className="text-sm">{log.userId.substring(0, 10)}...</td>
-                                    </tr>
-                                ))}
+                                {recentLogs.map((log, i) => {
+                                    // Swap logic for Action
+                                    const displayAction = (log.resourceId && (log.resourceId.includes('CREATE') || log.resourceId.includes('UPDATE') || log.resourceId.includes('DELETE')))
+                                        ? log.resourceId
+                                        : log.action;
+
+                                    // Swap logic for Resource (Hash)
+                                    const displayResource = (log.resourceId && (log.resourceId.includes('CREATE') || log.resourceId.includes('UPDATE') || log.resourceId.includes('DELETE')))
+                                        ? log.action // Valid Hash in swapped case
+                                        : log.resourceId;
+
+                                    return (
+                                        <tr key={i}>
+                                            <td className="text-xs text-muted">
+                                                {new Date(log.timestamp).toLocaleTimeString()}
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${displayAction.includes('CREATE') ? 'badge-green' : displayAction.includes('DELETE') ? 'badge-red' : 'badge-blue'}`}>
+                                                    {displayAction.length > 20 ? displayAction.substring(0, 10) + '...' : displayAction}
+                                                </span>
+                                            </td>
+                                            <td className="text-sm">
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
+                                                    <span
+                                                        style={{ fontFamily: 'monospace', color: '#cbd5e1', cursor: 'pointer', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                                        onClick={() => {
+                                                            const newSet = new Set(expandedResources);
+                                                            if (newSet.has(i)) newSet.delete(i);
+                                                            else newSet.add(i);
+                                                            setExpandedResources(newSet);
+                                                        }}
+                                                        title={expandedResources.has(i) ? "Click to collapse" : "Click to expand"}
+                                                    >
+                                                        {displayResource && displayResource.startsWith('0x')
+                                                            ? (expandedResources.has(i) ? displayResource : displayResource.substring(0, 10) + '...')
+                                                            : displayResource}
+                                                    </span>
+
+                                                    {displayResource && displayResource.startsWith('0x') && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleCopy(displayResource, i);
+                                                            }}
+                                                            style={{
+                                                                background: 'rgba(59, 130, 246, 0.1)',
+                                                                border: 'none',
+                                                                borderRadius: '4px',
+                                                                padding: '4px',
+                                                                cursor: 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                justifyContent: 'center',
+                                                                color: copiedIndex === i ? '#34d399' : '#94a3b8',
+                                                                transition: 'all 0.2s',
+                                                                flexShrink: 0
+                                                            }}
+                                                            title="Copy full hash"
+                                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                                                        >
+                                                            {copiedIndex === i ? <Check size={14} /> : <Copy size={14} />}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="text-sm">{log.userId.substring(0, 10)}...</td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     </div>

@@ -32,6 +32,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/appointments")
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Slf4j
 public class AppointmentController {

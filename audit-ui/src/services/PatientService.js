@@ -39,6 +39,12 @@ const PatientService = {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(patient)
             });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(`Erreur ${response.status}: ${errorData}`);
+            }
+
             return await response.json();
         } catch (error) {
             console.error("Error updating patient:", error);
