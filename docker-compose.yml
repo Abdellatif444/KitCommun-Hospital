@@ -301,6 +301,18 @@ services:
     networks:
       - hospital-network
 
+  audit-ui:
+    build:
+      context: ./audit-ui
+      dockerfile: Dockerfile
+    container_name: audit-ui
+    ports:
+      - "5173:5173"
+    depends_on:
+      - audit-service
+    networks:
+      - hospital-network
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # NETWORKS
 # WHY custom network: Allows services to communicate by container name
