@@ -55,7 +55,13 @@ const Dashboard = () => {
             const labels = last7Days.map(d => days[d.getDay()]);
             const counts = last7Days.map(d => {
                 const dateStr = d.toISOString().split('T')[0];
-                return data.filter(log => log.timestamp.startsWith(dateStr)).length;
+                return data.filter(log => {
+                    if (!log.timestamp) return false;
+                    // Robust timestamp parsing (handles both number and string)
+                    const logDate = new Date(log.timestamp);
+                    const logDateStr = logDate.toISOString().split('T')[0];
+                    return logDateStr === dateStr;
+                }).length;
             });
 
             setChartData({
