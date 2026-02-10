@@ -173,3 +173,23 @@ C'est ici que vous vérifiez l'intégrité des données.
 **Problème : Erreur de décodage des logs**
 *   **Cause** : Incompatibilité entre l'adresse du contrat dans `docker-compose.yml` et le réseau Ganache actuel.
 *   **Solution** : Vérifiez l'adresse `WEB3J_CONTRACT_ADDRESS` et redéployez si nécessaire.
+
+---
+
+## 8. Annexe : Matrice de Conformité (Cahier des Charges - Sujet 1)
+
+Ce tableau synthétise la couverture des exigences fonctionnelles, techniques et critères d'acceptation définis dans le Cahier des Charges.
+
+| Réf CDC | Exigence | Implémentation MedChain | Statut |
+| :--- | :--- | :--- | :---: |
+| **Atelier 1** | **Architecture Microservices** | Architecture conservée (Patient, Staff, Appointment, Gateway, Discovery). | ✅ |
+| **Atelier 2 (1.1.1)** | **Blockchain Privée** | Réseau **Ganache** (Dockerisé) utilisé comme Ledger privé. | ✅ |
+| **Atelier 2 (1.1.2)** | **Smart Contract** | Contrat `MedicalAudit.sol` stockant les preuves d'audit. | ✅ |
+| **Atelier 2 (1.1.3)** | **RGPD & Données Sensibles** | **Aucune donnée claire** sur la blockchain (Pseudonymisation + Hash). | ✅ |
+| **Atelier 2 (1.2)** | **Microservice Audit** | Service `audit-service` centralisant la communication Blockchain via Web3j. | ✅ |
+| **Atelier 3 (1.1)** | **Stack Technique** | Spring Boot 3, PostgreSQL, Docker Compose, API REST, JWT. | ✅ |
+| **Atelier 3 (4)** | **Sécurité** | Transactions signées (Backend Wallet), APIs sécurisées par Gateway/JWT. | ✅ |
+| **Page 8** | **Critère : Redémarrage** | Persistance des données Blockchain (Volume Docker) et SQL assurée après redémarrage. | ✅ |
+| **Page 8** | **Critère : Filtrage Audit** | Filtrage par Patient, Utilisateur et Date implémenté dans le Backend et l'UI. | ✅ |
+| **Page 8** | **Critère : Vérifiabilité** | Toute action CRUD génère une transaction vérifiable (Preuve visuelle dans l'UI). | ✅ |
+| **Sprint 3** | **Interface Web Audit** | Dashboard React complet avec visualisation des blocs et statuts d'intégrité. | ✅ |
