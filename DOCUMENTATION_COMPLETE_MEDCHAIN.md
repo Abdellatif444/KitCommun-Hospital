@@ -193,3 +193,40 @@ Ce tableau synthétise la couverture des exigences fonctionnelles, techniques et
 | **Page 8** | **Critère : Filtrage Audit** | Filtrage par Patient, Utilisateur et Date implémenté dans le Backend et l'UI. | ✅ |
 | **Page 8** | **Critère : Vérifiabilité** | Toute action CRUD génère une transaction vérifiable (Preuve visuelle dans l'UI). | ✅ |
 | **Sprint 3** | **Interface Web Audit** | Dashboard React complet avec visualisation des blocs et statuts d'intégrité. | ✅ |
+
+---
+
+## 9. Annexe : Matrice de Conformité (Kit Commun - Socle Transversal)
+
+Ce tableau valide le respect des règles architecturales imposées par le Cahier des Charges du Socle Commun (01/12/2025).
+
+| Réf CDC Socle | Exigence | Respect dans le Projet | Statut |
+| :--- | :--- | :--- | :---: |
+| **Atelier 1** | **Architecture Microservices** | Conservation stricte des services : Patient, Users (Staff), Auth, Consultations (Appointment). | ✅ |
+| **Atelier 1** | **Non-Modification du Coeur** | Aucune logique métier, endpoint ou règle de gestion du Kit Commun n'a été altérée. | ✅ |
+| **Atelier 2** | **Endpoints Standard** | Les API REST (POST /patients, GET /consultations...) sont inchangées. | ✅ |
+| **Atelier 3 (3.1)** | **Stack Technique** | Utilisation exclusive de Spring Boot, PostgreSQL, Docker Compose. | ✅ |
+| **Atelier 3 (3.4)** | **Sécurité Minimale** | L'authentification JWT est maintenue et utilisée pour sécuriser les appels. | ✅ |
+| **Atelier 3 (3.4)** | **Données Sensibles** | Les noms, diagnostics et données médicales restent **uniquement** dans PostgreSQL. | ✅ |
+| **Annexe 2.1** | **Règle Transversale** | La fonctionnalité Blockchain a été ajoutée via un **nouveau microservice** (`audit-service`) et des extensions non-intrusives (`AuditClient`). | ✅ |
+
+---
+
+## 10. Annexe : Organisation du Projet & Méthode
+
+Ce projet a été réalisé en suivant strictement l'organisation définie dans le Cahier des Charges.
+
+### 10.1 Déroulement par Phase
+*   **Phase 1 (Socle)** : Appropriation du Kit Commun et validation des microservices de base (Patient, Staff, Auth, Appointment).
+*   **Phase 2 (Spécialisation)** : Développement du Sujet 1 (Blockchain) en parallèle du fonctionnement du Kit Commun.
+
+### 10.2 Gestion de Projet (Scrum)
+Le projet a été mené sur **3 Sprints** de 2 semaines :
+1.  **Sprint 1** : Mise en place infrastructure (Docker, Ganache) & Hooks.
+2.  **Sprint 2** : Smart Contract & Intégration Backend.
+3.  **Sprint 3** : UI Audit & Validation finale.
+
+### 10.3 Architecture Solution
+Conformément à l'exigence **"Facteur Qualité Logiciel = Intégrité & Traçabilité"** :
+*   Le système garantit que **toute modification** est détectée.
+*   L'architecture respecte la séparation **Données Médicales (SQL)** / **Preuves (Blockchain)**.
