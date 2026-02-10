@@ -28,7 +28,7 @@ Write-Host "`n[2/6] Test Auth Service - Register..." -ForegroundColor Yellow
 try {
     $register = curl.exe -X POST http://localhost:8080/api/auth/register `
         -H "Content-Type: application/json" `
-        -d '{\"username\":\"test_user\",\"email\":\"test@hospital.com\",\"password\":\"password123\"}' `
+        -d '{\"username\":\"audit_admin\",\"email\":\"audit@hospital.com\",\"password\":\"password123\"}' `
         2>&1 | Out-String
     
     if ($register -match '"accessToken"') {
@@ -53,7 +53,7 @@ Write-Host "`n[3/6] Test Auth Service - Login..." -ForegroundColor Yellow
 try {
     $login = curl.exe -X POST http://localhost:8080/api/auth/login `
         -H "Content-Type: application/json" `
-        -d '{\"username\":\"test_user\",\"password\":\"password123\"}' `
+        -d '{\"username\":\"audit_admin\",\"password\":\"password123\"}' `
         2>&1 | Out-String
     
     if ($login -match '"accessToken"') {

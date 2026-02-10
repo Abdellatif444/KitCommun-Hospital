@@ -4,7 +4,7 @@ module.exports = {
     migrations_directory: "./smart-contracts",
     networks: {
         hospital: {
-            host: "hospital-blockchain",     // Docker container name (for internal network)
+            host: "ganache-blockchain",     // Docker container name (for internal network)
             port: 8545,            // Port Ganache défini dans docker-compose
             network_id: "*",       // Match any network id
         }

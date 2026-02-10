@@ -290,6 +290,17 @@ services:
     networks:
       - hospital-network
 
+  blockchain-deployer:
+    build:
+      context: blockchain-network
+      dockerfile: Dockerfile
+    container_name: blockchain-deployer
+    restart: on-failure
+    depends_on:
+      - ganache
+    networks:
+      - hospital-network
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # NETWORKS
 # WHY custom network: Allows services to communicate by container name

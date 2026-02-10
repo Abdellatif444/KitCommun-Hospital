@@ -57,7 +57,8 @@ Accédez à l'interface : [http://localhost:5173](http://localhost:5173)
 
 | Fichier | Modification |
 |---------|--------------|
-| `docker-compose.yml` | Ajout `audit-service`, fix ports 8083/8086, config `AUDIT_SERVICE_URL`. |
+| `docker-compose.yml` | Ajout `audit-service` et `blockchain-deployer`, fix ports. |
+| `blockchain-network/truffle-config.js` | Correction du nom d'hôte (`ganache-blockchain`) pour le déploiement interne. |
 | `audit-service/Dockerfile` | Création du fichier pour conteneurisation. |
 | `audit-ui/src/pages/AuditLogs.jsx` | Nettoyage mock data, connexion API réelle. |
 | `audit-ui/src/pages/Dashboard.jsx` | Graphiques dynamiques via API. |
