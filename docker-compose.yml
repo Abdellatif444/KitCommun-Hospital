@@ -127,7 +127,7 @@ services:
     ports:
       - "7545:8545"
     command: >
-      --host 0.0.0.0 --port 8545 --networkId 5777 --gasLimit 6721975 --gasPrice 20000000000 --mnemonic "myth like bonus scare over problem client lizard pioneer submit female collect" --accounts 10 --defaultBalanceEther 100
+      --host 0.0.0.0 --port 8545 --networkId 5777 --gasLimit 6721975 --gasPrice 20000000000 --account="0xf5058b2888f328cf1472cc8a864c6f5aba8f0cf5a0e2c1e56a6600758428807c,100000000000000000000"
     networks:
       - hospital-network
 
@@ -280,7 +280,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
       - WEB3J_CLIENT_ADDRESS=http://ganache:8545
-      - WEB3J_CONTRACT_ADDRESS=0x9919509B9FB8AF43F0576854a39d8850eCC56c0E
+      - WEB3J_CONTRACT_ADDRESS=0x987e9C54Fb9009f323282D0c4654223bb4682CaB
       - WEB3J_WALLET_PRIVATE_KEY=0xf5058b2888f328cf1472cc8a864c6f5aba8f0cf5a0e2c1e56a6600758428807c
     depends_on:
       discovery-service:
@@ -295,9 +295,9 @@ services:
       context: blockchain-network
       dockerfile: Dockerfile
     container_name: blockchain-deployer
-    restart: on-failure
     depends_on:
       - ganache
+    restart: on-failure
     networks:
       - hospital-network
 

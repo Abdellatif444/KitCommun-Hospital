@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/audit")
+@CrossOrigin(origins = "*") // Autoriser le Frontend (React/Vite)
 public class AuditController {
 
     private final AuditService auditService;

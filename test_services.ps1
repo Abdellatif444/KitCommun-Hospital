@@ -77,10 +77,11 @@ try {
 Write-Host "`n[4/6] Test Patient Service - Create Patient..." -ForegroundColor Yellow
 if ($global:token) {
     try {
+        $rnd = Get-Random -Minimum 1000000 -Maximum 9999999
         $patient = curl.exe -X POST http://localhost:8080/api/patients `
             -H "Content-Type: application/json" `
             -H "Authorization: Bearer $global:token" `
-            -d '{\"nationalId\":\"123456789\",\"firstName\":\"Jean\",\"lastName\":\"Dupont\",\"dateOfBirth\":\"1990-01-01\",\"gender\":\"MALE\",\"email\":\"jean.dupont@mail.com\"}' `
+            -d "{\`"nationalId\`":\`"$rnd\`",\`"firstName\`":\`"Jean\`",\`"lastName\`":\`"Dupont\`",\`"dateOfBirth\`":\`"1990-01-01\`",\`"gender\`":\`"MALE\`",\`"email\`":\`"jean.dupont$rnd@mail.com\`"}" `
             2>&1 | Out-String
         
         if ($patient -match '"id"') {
