@@ -124,6 +124,10 @@ public class Patient {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "integrity_hash")
+    @lombok.ToString.Exclude
+    private String integrityHash;
+
     /**
      * Soft Delete flag.
      * WHY: To maintain audit trail even after "deletion".

@@ -14,4 +14,5 @@ public class AuditLogRequest {
     private String action;
     private String resourceId;
     private String details;
+    private String dataHash;
 }

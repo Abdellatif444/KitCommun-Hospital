@@ -17,18 +17,24 @@ public class AuditDto {
     private String details;
     private Long timestamp;
     private String transactionHash;
+    private String dataHash;
 
     // Constructeurs
     public AuditDto() {}
 
-    public AuditDto(String userId, String action, String resourceId, String details, Long timestamp, String transactionHash) {
+    public AuditDto(String userId, String action, String resourceId, String details, Long timestamp, String transactionHash, String dataHash) {
         this.userId = userId;
         this.action = action;
         this.resourceId = resourceId;
         this.details = details;
         this.timestamp = timestamp;
         this.transactionHash = transactionHash;
+        this.dataHash = dataHash;
     }
+
+    // Getters et Setters
+    public String getDataHash() { return dataHash; }
+    public void setDataHash(String dataHash) { this.dataHash = dataHash; }
 
     // Getters et Setters
     public String getUserId() { return userId; }

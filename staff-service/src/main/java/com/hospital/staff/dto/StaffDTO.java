@@ -57,6 +57,8 @@ public class StaffDTO {
 
     private LocalDate hireDate;
 
-    private boolean active;
+    private Boolean active;
+
+    private String integrityHash;
 }
 

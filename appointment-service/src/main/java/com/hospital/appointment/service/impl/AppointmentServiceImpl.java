@@ -73,9 +73,15 @@ public class AppointmentServiceImpl implements AppointmentService {
         Appointment savedAppointment = appointmentRepository.save(appointment);
         log.info("Appointment created with ID: {}", savedAppointment.getId());
 
+        // Compute and store integrity hash (ID is now available)
+        String integrityHash = computeDataHash(savedAppointment);
+        savedAppointment.setIntegrityHash(integrityHash);
+        savedAppointment = appointmentRepository.save(savedAppointment);
+
         // Audit logging
         auditClient.logAction(getCurrentUserId(), "CREATE_APPOINTMENT", savedAppointment.getId().toString(), 
-            "Appointment created for patient " + request.getPatientId() + " with doctor " + request.getDoctorId());
+            "Appointment created for patient " + request.getPatientId() + " with doctor " + request.getDoctorId(),
+            integrityHash);
 
         return appointmentMapper.toDTO(savedAppointment);
     }
@@ -137,11 +143,17 @@ public class AppointmentServiceImpl implements AppointmentService {
         }
 
         appointmentMapper.updateEntityFromDTO(appointmentDTO, existingAppointment);
+        
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(existingAppointment);
+        existingAppointment.setIntegrityHash(integrityHash);
+        
         Appointment updatedAppointment = appointmentRepository.save(existingAppointment);
 
         // Audit logging
         auditClient.logAction(getCurrentUserId(), "UPDATE_APPOINTMENT", id.toString(), 
-            "Appointment updated");
+            "Appointment updated",
+            integrityHash);
 
         return appointmentMapper.toDTO(updatedAppointment);
     }
@@ -156,6 +168,11 @@ public class AppointmentServiceImpl implements AppointmentService {
                 .orElseThrow(() -> new AppointmentNotFoundException("Appointment not found: " + id));
 
         appointment.setStatus(status);
+        
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(appointment);
+        appointment.setIntegrityHash(integrityHash);
+        
         Appointment updated = appointmentRepository.save(appointment);
 
         return appointmentMapper.toDTO(updated);
@@ -178,11 +195,16 @@ public class AppointmentServiceImpl implements AppointmentService {
         // appointment.setActive(false); // Optional: depends on business rule. 
         // For now, allow viewing cancelled appointments in history.
         
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(appointment);
+        appointment.setIntegrityHash(integrityHash);
+
         appointmentRepository.save(appointment);
         
         // Audit logging
         auditClient.logAction(getCurrentUserId(), "CANCEL_APPOINTMENT", id.toString(), 
-            "Appointment cancelled");
+            "Appointment cancelled",
+            integrityHash);
         
         log.info("Appointment cancelled successfully: {}", id);
     }
@@ -228,6 +250,26 @@ public class AppointmentServiceImpl implements AppointmentService {
     private String getCurrentUserId() {
         // TODO: In Subject 2 (Security), extract from Spring SecurityContext
         return "system";
+    }
+
+    private String computeDataHash(Object data) {
+        try {
+            String input = data.toString();
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder(2 * encodedhash.length);
+            for (int i = 0; i < encodedhash.length; i++) {
+                String hex = Integer.toHexString(0xff & encodedhash[i]);
+                if(hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            log.warn("Failed to compute data hash", e);
+            return "HASH_ERROR";
+        }
     }
 }
 

@@ -43,6 +43,26 @@ const StaffService = {
         }
     },
 
+    updateStaff: async (id, staff) => {
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(staff)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.text();
+                throw new Error(`Erreur ${response.status}: ${errorData}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("Error updating staff:", error);
+            throw error;
+        }
+    },
+
     deactivateStaff: async (id) => {
         try {
             const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });

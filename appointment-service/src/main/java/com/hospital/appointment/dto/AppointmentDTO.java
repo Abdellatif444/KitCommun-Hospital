@@ -61,5 +61,7 @@ public class AppointmentDTO {
     // ═══════════════════════════════════════════════════════════════════════════
     private String patientName;   // Fetched from Patient Service
     private String doctorName;    // Fetched from Staff Service
+    
+    private String integrityHash;
 }
 

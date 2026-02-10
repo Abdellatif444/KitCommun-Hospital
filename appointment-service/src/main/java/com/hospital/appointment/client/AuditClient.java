@@ -17,13 +17,14 @@ public class AuditClient {
     @Value("${audit.service.url:http://localhost:8083}")
     private String auditServiceBaseUrl;
 
-    public void logAction(String userId, String action, String resourceId, String details) {
+    public void logAction(String userId, String action, String resourceId, String details, String dataHash) {
         try {
             AuditLogRequest request = AuditLogRequest.builder()
                 .userId(userId)
                 .action(action)
                 .resourceId(resourceId)
                 .details(details)
+                .dataHash(dataHash)
                 .build();
             
             restTemplate.postForObject(auditServiceBaseUrl + "/audit/log", request, String.class);

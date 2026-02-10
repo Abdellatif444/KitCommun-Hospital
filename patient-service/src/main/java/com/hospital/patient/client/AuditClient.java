@@ -18,12 +18,17 @@ public class AuditClient {
     private String auditServiceBaseUrl;
 
     public void logAction(String userId, String action, String resourceId, String details) {
+        logAction(userId, action, resourceId, details, null);
+    }
+
+    public void logAction(String userId, String action, String resourceId, String details, String dataHash) {
         try {
             AuditLogRequest request = AuditLogRequest.builder()
                 .userId(userId)
                 .action(action)
                 .resourceId(resourceId)
                 .details(details)
+                .dataHash(dataHash)
                 .build();
             
             // Appel POST vers le service Audit

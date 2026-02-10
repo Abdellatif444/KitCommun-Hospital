@@ -32,7 +32,8 @@ contract MedicalAudit {
         string indexed userId, 
         string indexed resourceId, 
         string action, 
-        uint256 timestamp
+        uint256 timestamp,
+        string dataHash
     );
 
     /**
@@ -63,7 +64,7 @@ contract MedicalAudit {
         logs.push(newLog);
 
         // Émission de l'événement pour les écouteurs externes (Microservice Audit)
-        emit AuditLogCreated(_userId, _resourceId, _action, block.timestamp);
+        emit AuditLogCreated(_userId, _resourceId, _action, block.timestamp, _dataHash);
     }
 
     /**

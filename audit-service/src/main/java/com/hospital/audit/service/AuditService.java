@@ -45,12 +45,16 @@ public class AuditService {
 
         logger.info("Envoi de la transaction Audit vers la Blockchain... [User: {}, Action: {}]", 
             auditDto.getUserId(), auditDto.getAction());
+        String detailsToSend = auditDto.getDetails() != null ? auditDto.getDetails() : "N/A";
+        if (auditDto.getDataHash() != null && !auditDto.getDataHash().isEmpty()) {
+            detailsToSend = "HASH:" + auditDto.getDataHash() + "|" + detailsToSend;
+        }
 
         TransactionReceipt receipt = medicalAudit.logAction(
             auditDto.getUserId(),
             auditDto.getAction(),
             auditDto.getResourceId(),
-            auditDto.getDetails() != null ? auditDto.getDetails() : "N/A"
+            detailsToSend
         ).send();
 
         logger.info("Transaction minée ! Hash: {}", receipt.getTransactionHash());
@@ -95,45 +99,83 @@ public class AuditService {
                         dto.setResourceId((String) nonIndexed.get(2).getValue());
                         BigInteger ts = (BigInteger) nonIndexed.get(3).getValue();
                         dto.setTimestamp(ts.longValue() * 1000);
+                        // Tentative de récupérer details si disponible (index 4 ?)
+                        if (nonIndexed.size() >= 5) {
+                             dto.setDetails((String) nonIndexed.get(4).getValue());
+                        }
                     } else {
                         throw new RuntimeException("Format inattendu, passage au mode indexé");
                     }
-                } catch (Exception e) {
-                    // Tentative 2 : Décodage hybride pour événements indexés
-                    // Si userId et action sont indexés, ils sont dans les topics (hashés)
-                    // Data ne contient alors que : details (string) et timestamp (uint256)
+                } catch (Exception e1) {
+                    // ====== TENTATIVE 2 : NOUVEAU CONTRAT (userId, resourceId INDEXÉS) ======
+                    // Data: action (string), timestamp (uint256), dataHash (string)
                     try {
-                        List<TypeReference<Type>> fallbackParams = new ArrayList<>();
-                        // Cast explicite (Raw Type) pour satisfaire le compilateur Java/Web3j
-                        fallbackParams.add((TypeReference) new TypeReference<Utf8String>() {}); 
-                        fallbackParams.add((TypeReference) new TypeReference<Uint256>() {});    
+                        List<TypeReference<Type>> newContractParams = new ArrayList<>();
+                        newContractParams.add((TypeReference) new TypeReference<Utf8String>() {}); // Action
+                        newContractParams.add((TypeReference) new TypeReference<Uint256>() {});    // Timestamp
+                        newContractParams.add((TypeReference) new TypeReference<Utf8String>() {}); // DataHash
 
-                        List<Type> mixedData = FunctionReturnDecoder.decode(log.getData(), fallbackParams);
+                        List<Type> data = FunctionReturnDecoder.decode(log.getData(), newContractParams);
                         
-                        // Récupération depuis les topics (si disponibles)
-                        List<String> topics = log.getTopics();
-                        // Topic 0 est la signature, Topic 1 = UserId (Hash), Topic 2 = Action (Hash)
-                        String rawUserId = (topics.size() > 1) ? topics.get(1) : "Unknown";
-                        String rawAction = (topics.size() > 2) ? topics.get(2) : "Unknown";
-
-                        dto.setUserId(rawUserId); // Affichage complet du hash blockchain
-                        dto.setAction(rawAction);
-                        
-                        if (mixedData.size() >= 2) {
-                            dto.setResourceId((String) mixedData.get(0).getValue());
-                            dto.setTimestamp(((BigInteger) mixedData.get(1).getValue()).longValue() * 1000);
+                        if (data.size() >= 3) {
+                             dto.setAction((String) data.get(0).getValue());
+                             dto.setTimestamp(((BigInteger) data.get(1).getValue()).longValue() * 1000);
+                             dto.setDataHash((String) data.get(2).getValue());
+                             
+                             List<String> topics = log.getTopics();
+                             dto.setUserId(topics.size() > 1 ? topics.get(1) : "UnknownUser");
+                             dto.setResourceId(topics.size() > 2 ? topics.get(2) : "UnknownResource");
+                             
+                             dto.setDetails("HashLog: " + dto.getDataHash());
                         } else {
-                            dto.setResourceId("N/A");
-                            dto.setTimestamp(System.currentTimeMillis());
+                            throw new RuntimeException("Format V2 invalide");
                         }
-                    } catch (Exception ex) {
-                        logger.error("Echec décodage log {}: {}", log.getTransactionHash(), ex.getMessage());
-                        dto.setUserId("Error");
-                        dto.setAction("Error");
-                        dto.setResourceId("Error Decoding");
-                        dto.setTimestamp(System.currentTimeMillis());
+                    } catch (Exception e2) {
+                        // ====== TENTATIVE 3 : ANCIEN CONTRAT (userId, action INDEXÉS) ======
+                        // Data: resourceId/details (string), timestamp (uint256)
+                        try {
+                             List<TypeReference<Type>> oldParams = new ArrayList<>();
+                             oldParams.add((TypeReference) new TypeReference<Utf8String>() {}); 
+                             oldParams.add((TypeReference) new TypeReference<Uint256>() {});    
+
+                             List<Type> data = FunctionReturnDecoder.decode(log.getData(), oldParams);
+                             
+                             List<String> topics = log.getTopics();
+                             dto.setUserId(topics.size() > 1 ? topics.get(1) : "Unknown");
+                             dto.setAction(topics.size() > 2 ? topics.get(2) : "Unknown");
+                             
+                             if (data.size() >= 2) {
+                                 dto.setResourceId((String) data.get(0).getValue());
+                                 dto.setTimestamp(((BigInteger) data.get(1).getValue()).longValue() * 1000);
+                             }
+                        } catch (Exception ex) {
+                             logger.error("Echec décodage log {}: {}", log.getTransactionHash(), ex.getMessage());
+                             dto.setResourceId("Decode Error");
+                        }
                     }
                 }
+
+                // Parsing du hash depuis details ou resourceId (au cas où)
+                String detailsToParse = dto.getDetails();
+                if (detailsToParse != null && detailsToParse.startsWith("HASH:")) {
+                    int pipeIndex = detailsToParse.indexOf("|");
+                    if (pipeIndex > 0) {
+                        dto.setDataHash(detailsToParse.substring(5, pipeIndex));
+                        dto.setDetails(detailsToParse.substring(pipeIndex + 1));
+                    }
+                }
+                
+                // Fallback: Check ResourceId too, sometimes data ends up there due to ABI mismatch
+                String resourceToParse = dto.getResourceId();
+                if (resourceToParse != null && resourceToParse.startsWith("HASH:")) {
+                     int pipeIndex = resourceToParse.indexOf("|");
+                    if (pipeIndex > 0) {
+                        String extractedHash = resourceToParse.substring(5, pipeIndex);
+                        dto.setDataHash(extractedHash);
+                        dto.setResourceId(resourceToParse.substring(pipeIndex + 1));
+                    }
+                }
+
                 
                 results.add(dto);
             }

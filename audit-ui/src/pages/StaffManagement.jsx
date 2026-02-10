@@ -8,6 +8,7 @@ const StaffManagement = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [notification, setNotification] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     // Form data
     const [formData, setFormData] = useState({
@@ -76,16 +77,30 @@ const StaffManagement = () => {
         }
     };
 
-    const handleOpenModal = () => {
-        setFormData({
-            employeeId: `EMP-${Date.now().toString().slice(-6)}`,
-            firstName: '',
-            lastName: '',
-            email: '',
-            phoneNumber: '',
-            role: 'DOCTOR',
-            specialty: 'GENERAL_MEDICINE'
-        });
+    const handleOpenModal = (staff = null) => {
+        if (staff) {
+            setEditingId(staff.id);
+            setFormData({
+                employeeId: staff.employeeId,
+                firstName: staff.firstName,
+                lastName: staff.lastName,
+                email: staff.email,
+                phoneNumber: staff.phoneNumber,
+                role: staff.role,
+                specialty: staff.specialty || 'GENERAL_MEDICINE'
+            });
+        } else {
+            setEditingId(null);
+            setFormData({
+                employeeId: `EMP-${Date.now().toString().slice(-6)}`,
+                firstName: '',
+                lastName: '',
+                email: '',
+                phoneNumber: '',
+                role: 'DOCTOR',
+                specialty: 'GENERAL_MEDICINE'
+            });
+        }
         setShowModal(true);
     };
 
@@ -102,8 +117,13 @@ const StaffManagement = () => {
         e.preventDefault();
         setIsProcessing(true);
         try {
-            await StaffService.createStaff(formData);
-            showNotification(`Personnel ${formData.firstName} ${formData.lastName} ajouté !`, "success");
+            if (editingId) {
+                await StaffService.updateStaff(editingId, formData);
+                showNotification(`Personnel ${formData.firstName} ${formData.lastName} mis à jour !`, "success");
+            } else {
+                await StaffService.createStaff(formData);
+                showNotification(`Personnel ${formData.firstName} ${formData.lastName} ajouté !`, "success");
+            }
             await loadStaff();
             handleCloseModal();
         } catch (error) {
@@ -192,7 +212,7 @@ const StaffManagement = () => {
                     >
                         <Zap size={18} /> {isProcessing ? 'Génération...' : 'Génération Aléatoire'}
                     </button>
-                    <button onClick={handleOpenModal} style={buttonStyle('green')}>
+                    <button onClick={() => handleOpenModal(null)} style={buttonStyle('green')}>
                         <Plus size={18} /> Nouveau Membre
                     </button>
                     <button onClick={loadStaff} style={buttonStyle('gray')}>
@@ -228,15 +248,16 @@ const StaffManagement = () => {
                             <th style={headerCellStyle}>Identité</th>
                             <th style={headerCellStyle}>Spécialité</th>
                             <th style={headerCellStyle}>Contact</th>
+                            <th style={headerCellStyle}>Integrity Hash</th>
                             <th style={{ ...headerCellStyle, textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Chargement...</td></tr>
+                            <tr><td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Chargement...</td></tr>
                         ) : staffList.length === 0 ? (
                             <tr>
-                                <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                                <td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
                                     Aucun personnel trouvé. Utilisez le bouton "Génération Aléatoire".
                                 </td>
                             </tr>
@@ -278,8 +299,24 @@ const StaffManagement = () => {
                                         <div>{staff.email}</div>
                                         <div style={{ color: '#64748b' }}>{staff.phoneNumber}</div>
                                     </td>
+                                    <td style={{ ...cellStyle, fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>
+                                        {staff.integrityHash ? (
+                                            <span title={staff.integrityHash} style={{ cursor: 'help', borderBottom: '1px dashed #64748b' }}>
+                                                {staff.integrityHash.substring(0, 8)}...
+                                            </span>
+                                        ) : (
+                                            <span style={{ color: '#ef4444', fontSize: '0.7rem' }}>N/A</span>
+                                        )}
+                                    </td>
                                     <td style={{ ...cellStyle, textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                            <button
+                                                onClick={() => handleOpenModal(staff)}
+                                                style={{ padding: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }}
+                                                title="Modifier"
+                                            >
+                                                <Edit size={16} />
+                                            </button>
                                             <button
                                                 onClick={() => handleDelete(staff.id)}
                                                 style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', border: 'none', borderRadius: '0.375rem', cursor: 'pointer' }}
@@ -363,7 +400,7 @@ const StaffManagement = () => {
                                 <button type="button" onClick={handleCloseModal} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: '#475569', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Annuler</button>
                                 <button type="submit" disabled={isProcessing} style={{ padding: '0.75rem 1.5rem', borderRadius: '0.5rem', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     {isProcessing ? <RefreshCw className="animate-spin" size={18} /> : <CheckCircle size={18} />}
-                                    Créer
+                                    {editingId ? 'Mettre à jour' : 'Créer'}
                                 </button>
                             </div>
                         </form>

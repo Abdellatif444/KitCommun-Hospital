@@ -32,6 +32,17 @@ const AppointmentService = {
             console.error("Error fetching appointments:", error);
             return [];
         }
+    },
+
+    // Cancel appointment
+    cancelAppointment: async (id) => {
+        try {
+            const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error('Failed to cancel appointment');
+        } catch (error) {
+            console.error("Error cancelling appointment:", error);
+            throw error;
+        }
     }
 };
 

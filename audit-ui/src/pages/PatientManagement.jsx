@@ -262,15 +262,16 @@ const PatientManagement = () => {
                             <th style={headerCellStyle}>ID / UUID</th>
                             <th style={headerCellStyle}>Identité</th>
                             <th style={headerCellStyle}>Contact</th>
+                            <th style={headerCellStyle}>Integrity Hash</th>
                             <th style={{ ...headerCellStyle, textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Chargement...</td></tr>
+                            <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Chargement...</td></tr>
                         ) : patients.length === 0 ? (
                             <tr>
-                                <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                                <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
                                     Aucune donnée. Utilisez le bouton "Génération Rapide".
                                 </td>
                             </tr>
@@ -291,6 +292,15 @@ const PatientManagement = () => {
                                     </td>
                                     <td style={{ ...cellStyle, color: '#cbd5e1' }}>
                                         {patient.email}
+                                    </td>
+                                    <td style={{ ...cellStyle, fontFamily: 'monospace', fontSize: '0.75rem', color: '#64748b' }}>
+                                        {patient.integrityHash ? (
+                                            <span title={patient.integrityHash} style={{ cursor: 'help', borderBottom: '1px dashed #64748b' }}>
+                                                {patient.integrityHash.substring(0, 8)}...
+                                            </span>
+                                        ) : (
+                                            <span style={{ color: '#ef4444', fontSize: '0.7rem' }}>N/A</span>
+                                        )}
                                     </td>
                                     <td style={{ ...cellStyle, textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>

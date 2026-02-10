@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, UserPlus, FileText, CheckCircle, Clock, Video, User, RefreshCw } from 'lucide-react';
+import { Calendar, UserPlus, FileText, CheckCircle, Clock, Video, User, RefreshCw, XCircle } from 'lucide-react';
 import AppointmentService from '../services/AppointmentService';
 import PatientService from '../services/PatientService';
 import StaffService from '../services/StaffService';
@@ -35,6 +35,18 @@ const AppointmentManagement = () => {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleCancel = async (id) => {
+        if (window.confirm('Voulez-vous vraiment annuler ce rendez-vous ?')) {
+            try {
+                await AppointmentService.cancelAppointment(id);
+                showNotification("Rendez-vous annulé avec succès.", "success");
+                await loadAppointments();
+            } catch (error) {
+                showNotification("Erreur lors de l'annulation: " + error.message, "error");
+            }
         }
     };
 
@@ -467,24 +479,69 @@ const AppointmentManagement = () => {
                                             )}
                                         </div>
                                     </div>
-                                    <div style={{
-                                        padding: '0.5rem 1.25rem',
-                                        borderRadius: '2rem',
-                                        fontSize: '0.85rem',
-                                        fontWeight: 700,
-                                        background: apt.status === 'SCHEDULED'
-                                            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)'
-                                            : 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.3) 100%)',
-                                        color: apt.status === 'SCHEDULED' ? '#10b981' : '#f87171',
-                                        border: `2px solid ${apt.status === 'SCHEDULED' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
-                                    }}>
-                                        <CheckCircle size={16} />
-                                        {apt.status}
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                                        {apt.integrityHash && (
+                                            <div title={apt.integrityHash} style={{
+                                                fontSize: '0.65rem',
+                                                fontFamily: 'monospace',
+                                                color: 'rgba(148, 163, 184, 0.7)',
+                                                cursor: 'help',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.25rem'
+                                            }}>
+                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div>
+                                                {apt.integrityHash.substring(0, 8)}
+                                            </div>
+                                        )}
+                                        <div style={{
+                                            padding: '0.5rem 1.25rem',
+                                            borderRadius: '2rem',
+                                            fontSize: '0.85rem',
+                                            fontWeight: 700,
+                                            background: apt.status === 'SCHEDULED'
+                                                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.3) 100%)'
+                                                : 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.3) 100%)',
+                                            color: apt.status === 'SCHEDULED' ? '#10b981' : '#f87171',
+                                            border: `2px solid ${apt.status === 'SCHEDULED' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            boxShadow: apt.status === 'SCHEDULED'
+                                                ? '0 0 15px rgba(16, 185, 129, 0.2)'
+                                                : '0 0 15px rgba(239, 68, 68, 0.2)'
+                                        }}>
+                                            <CheckCircle size={14} />
+                                            {apt.status}
+                                        </div>
+                                        {apt.status === 'SCHEDULED' && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleCancel(apt.id);
+                                                }}
+                                                style={{
+                                                    background: 'rgba(239, 68, 68, 0.15)',
+                                                    color: '#ef4444',
+                                                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                                                    borderRadius: '0.5rem',
+                                                    padding: '0.4rem 0.8rem',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.3rem',
+                                                    fontSize: '0.8rem',
+                                                    fontWeight: 600,
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.25)'}
+                                                onMouseLeave={(e) => e.target.style.background = 'rgba(239, 68, 68, 0.15)'}
+                                            >
+                                                <XCircle size={14} /> Annuler
+                                            </button>
+                                        )}
                                     </div>
+
                                 </div>
                             ))}
                         </div>

@@ -62,5 +62,7 @@ public class PatientDTO {
     private String emergencyContactName;
 
     private String emergencyContactPhone;
+    
+    private String integrityHash;
 }
 

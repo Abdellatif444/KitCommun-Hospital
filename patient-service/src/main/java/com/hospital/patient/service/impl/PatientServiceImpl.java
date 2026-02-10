@@ -58,11 +58,18 @@ public class PatientServiceImpl implements PatientService {
         Patient patient = patientMapper.toEntity(request);
 
         // Save and return
+        // Save and return
         Patient savedPatient = patientRepository.save(patient);
+        
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(savedPatient);
+        savedPatient.setIntegrityHash(integrityHash);
+        savedPatient = patientRepository.save(savedPatient);
+
         log.info("Patient created with ID: {}", savedPatient.getId());
 
         // AUDIT LOG
-        auditClient.logAction(getCurrentUserId(), "CREATE_PATIENT", savedPatient.getId().toString(), "Patient created");
+        auditClient.logAction(getCurrentUserId(), "CREATE_PATIENT", savedPatient.getId().toString(), "Patient created", integrityHash);
 
         return patientMapper.toDTO(savedPatient);
     }
@@ -141,14 +148,19 @@ public class PatientServiceImpl implements PatientService {
         }
 
         // Update fields
+        // Update fields
         // Business logic will be added in the specialized subject
         patientMapper.updateEntityFromDTO(patientDTO, existingPatient);
+        
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(existingPatient);
+        existingPatient.setIntegrityHash(integrityHash);
 
         Patient updatedPatient = patientRepository.save(existingPatient);
         log.info("Patient updated successfully: {}", id);
 
         // AUDIT LOG
-        auditClient.logAction(getCurrentUserId(), "UPDATE_PATIENT", id.toString(), "Patient updated");
+        auditClient.logAction(getCurrentUserId(), "UPDATE_PATIENT", id.toString(), "Patient updated", integrityHash);
 
         return patientMapper.toDTO(updatedPatient);
     }
@@ -166,12 +178,17 @@ public class PatientServiceImpl implements PatientService {
         // We do not delete the record, we mark it as inactive
         log.info("Performing SOFT DELETE for patient: {}", id);
         patient.setActive(false);
+        
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(patient);
+        patient.setIntegrityHash(integrityHash);
+
         patientRepository.save(patient);
         
         log.info("Patient deactivated successfully: {}", id);
 
         // AUDIT LOG
-        auditClient.logAction(getCurrentUserId(), "DELETE_PATIENT", id.toString(), "Patient soft deleted (deactivated)");
+        auditClient.logAction(getCurrentUserId(), "DELETE_PATIENT", id.toString(), "Patient soft deleted (deactivated)", integrityHash);
     }
 
     @Override
@@ -185,5 +202,25 @@ public class PatientServiceImpl implements PatientService {
         // In Subject 3, this will be extracted from the JWT token.
         // For Subject 1, we use a technical pseudonym (UUID) to follow security rules.
         return "u-86f91f24-f3a7-4c4f-9e6b-0b1e83a736a5"; 
+    }
+
+    private String computeDataHash(Object data) {
+        try {
+            String input = data.toString();
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder(2 * encodedhash.length);
+            for (int i = 0; i < encodedhash.length; i++) {
+                String hex = Integer.toHexString(0xff & encodedhash[i]);
+                if(hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            log.warn("Failed to compute data hash", e);
+            return "HASH_ERROR";
+        }
     }
 }

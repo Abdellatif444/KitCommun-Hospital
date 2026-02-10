@@ -113,6 +113,10 @@ public class Staff {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "integrity_hash")
+    @lombok.ToString.Exclude
+    private String integrityHash;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

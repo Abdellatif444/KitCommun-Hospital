@@ -53,11 +53,18 @@ public class StaffServiceImpl implements StaffService {
         staff.setActive(true);
         
         Staff savedStaff = staffRepository.save(staff);
+        
+        // Compute and store integrity hash (ID is now available)
+        String integrityHash = computeDataHash(savedStaff);
+        savedStaff.setIntegrityHash(integrityHash);
+        savedStaff = staffRepository.save(savedStaff);
+
         log.info("Staff created with ID: {}", savedStaff.getId());
 
         // Audit logging
         auditClient.logAction(getCurrentUserId(), "CREATE_STAFF", savedStaff.getId().toString(), 
-            "Staff member created: " + staffDTO.getEmployeeId() + " (" + staffDTO.getRole() + ")");
+            "Staff member created: " + staffDTO.getEmployeeId() + " (" + staffDTO.getRole() + ")",
+            integrityHash);
 
         return staffMapper.toDTO(savedStaff);
     }
@@ -126,11 +133,17 @@ public class StaffServiceImpl implements StaffService {
                 .orElseThrow(() -> new StaffNotFoundException("Staff not found with ID: " + id));
 
         staffMapper.updateEntityFromDTO(staffDTO, existingStaff);
+        
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(existingStaff);
+        existingStaff.setIntegrityHash(integrityHash);
+
         Staff updatedStaff = staffRepository.save(existingStaff);
         
         // Audit logging
         auditClient.logAction(getCurrentUserId(), "UPDATE_STAFF", id.toString(), 
-            "Staff member updated: " + existingStaff.getEmployeeId());
+            "Staff member updated: " + existingStaff.getEmployeeId(),
+            integrityHash);
         
         log.info("Staff updated successfully: {}", id);
         return staffMapper.toDTO(updatedStaff);
@@ -145,11 +158,17 @@ public class StaffServiceImpl implements StaffService {
                 .orElseThrow(() -> new StaffNotFoundException("Staff not found with ID: " + id));
 
         staff.setActive(false);
+        
+        // Compute and store integrity hash
+        String integrityHash = computeDataHash(staff);
+        staff.setIntegrityHash(integrityHash);
+
         staffRepository.save(staff);
         
         // Audit logging
         auditClient.logAction(getCurrentUserId(), "DEACTIVATE_STAFF", id.toString(), 
-            "Staff member deactivated: " + staff.getEmployeeId());
+            "Staff member deactivated: " + staff.getEmployeeId(),
+            integrityHash);
         
         log.info("Staff deactivated successfully: {}", id);
     }
@@ -167,6 +186,26 @@ public class StaffServiceImpl implements StaffService {
     private String getCurrentUserId() {
         // TODO: In Subject 2 (Security), extract from Spring SecurityContext
         return "system";
+    }
+
+    private String computeDataHash(Object data) {
+        try {
+            String input = data.toString();
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder(2 * encodedhash.length);
+            for (int i = 0; i < encodedhash.length; i++) {
+                String hex = Integer.toHexString(0xff & encodedhash[i]);
+                if(hex.length() == 1) {
+                    hexString.append('0');
+                }
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            log.warn("Failed to compute data hash", e);
+            return "HASH_ERROR";
+        }
     }
 }
 

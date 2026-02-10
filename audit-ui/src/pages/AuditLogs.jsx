@@ -523,11 +523,11 @@ const AuditLogs = () => {
                                         </td>
                                         <td style={{ padding: '1.125rem 1.25rem' }}>
                                             <span className={`badge ${((log.resourceId && log.resourceId.includes('CREATE')) || log.action.includes('CREATE')) ? 'badge-green' :
-                                                ((log.resourceId && log.resourceId.includes('DELETE')) || log.action.includes('DELETE')) ? 'badge-red' :
+                                                ((log.resourceId && (log.resourceId.includes('DELETE') || log.resourceId.includes('CANCEL') || log.resourceId.includes('DEACTIVATE'))) || (log.action.includes('DELETE') || log.action.includes('CANCEL') || log.action.includes('DEACTIVATE'))) ? 'badge-red' :
                                                     'badge-blue'
                                                 }`}>
                                                 {/* Bugfix: Swap logic */}
-                                                {(log.resourceId && (log.resourceId.startsWith('CREATE') || log.resourceId.startsWith('DELETE') || log.resourceId.startsWith('UPDATE')))
+                                                {(log.resourceId && (log.resourceId.startsWith('CREATE') || log.resourceId.startsWith('DELETE') || log.resourceId.startsWith('UPDATE') || log.resourceId.startsWith('DEACTIVATE') || log.resourceId.startsWith('CANCEL')))
                                                     ? log.resourceId
                                                     : (log.action.length > 20 ? log.action.substring(0, 10) + '...' : log.action)}
                                             </span>
@@ -538,7 +538,7 @@ const AuditLogs = () => {
                                             fontSize: '0.875rem',
                                             color: '#cbd5e1'
                                         }}>
-                                            {(log.resourceId && (log.resourceId.startsWith('CREATE') || log.resourceId.startsWith('DELETE') || log.resourceId.startsWith('UPDATE')))
+                                            {(log.resourceId && (log.resourceId.startsWith('CREATE') || log.resourceId.startsWith('DELETE') || log.resourceId.startsWith('UPDATE') || log.resourceId.startsWith('DEACTIVATE') || log.resourceId.startsWith('CANCEL')))
                                                 ? (log.action.startsWith('0x') ? 'Hash: ' + log.action.substring(0, 10) + '...' : log.action)
                                                 : log.resourceId}
                                         </td>
