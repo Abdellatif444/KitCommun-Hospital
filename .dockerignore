@@ -1,0 +1,12 @@
+# Ignore les fichiers temporaires et de développement
+**/.git
+**/.gitignore
+**/node_modules
+**/npm-debug.log
+**/.env
+**/target
+**/.idea
+**/.vscode
+
+# Ignore le frontend (il ne doit pas être dans les images backend)
+audit-ui/

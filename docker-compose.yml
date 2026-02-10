@@ -158,7 +158,7 @@ services:
       dockerfile: gateway-service/Dockerfile
     container_name: gateway-service
     ports:
-      - "8090:8080"
+      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
@@ -203,6 +203,7 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-patients:5432/hospital_patients
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - AUDIT_SERVICE_URL=http://audit-service:8083
     depends_on:
       discovery-service:
         condition: service_healthy
@@ -236,7 +237,7 @@ services:
       dockerfile: appointment-service/Dockerfile
     container_name: appointment-service
     ports:
-      - "8083:8083"
+      - "8086:8083"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-appointments:5432/hospital_appointments
@@ -265,6 +266,27 @@ services:
         condition: service_healthy
       postgres-medical-records:
         condition: service_healthy
+    networks:
+      - hospital-network
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: audit-service/Dockerfile
+    container_name: audit-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - WEB3J_CLIENT_ADDRESS=http://ganache:8545
+      - WEB3J_CONTRACT_ADDRESS=0x9919509B9FB8AF43F0576854a39d8850eCC56c0E
+      - WEB3J_WALLET_PRIVATE_KEY=0xf5058b2888f328cf1472cc8a864c6f5aba8f0cf5a0e2c1e56a6600758428807c
+    depends_on:
+      discovery-service:
+        condition: service_healthy
+      ganache:
+        condition: service_started
     networks:
       - hospital-network
 

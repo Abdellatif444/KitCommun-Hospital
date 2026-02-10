@@ -637,11 +637,24 @@ Une attention particulière a été portée à la méthode `addEntry` qui corres
 - [x] Modifier `medical-record-service` pour appeler `audit-service`
 - [x] Utiliser `RestTemplate` pour l'appel inter-services
 
-### Phase 3: Dashboard et visualisation (À faire)
-- [ ] Interface web (Angular/React) pour visualiser les logs d'audit
-- [ ] Styles et UX pour le dashboard administrateur
-- [ ] Tableau des logs avec filtres
-- [ ] Page détail d'une transaction
+### Phase 3: Dashboard et visualisation ✅ (Terminé)
+- [x] Interface web (React + Vite) créée dans `audit-ui`
+- [x] Styles "Glassmorphism" et UX moderne
+- [x] Tableau des logs avec filtres
+- [x] Connexion API via Axios
+
+## 💻 Interface Audit (Frontend)
+
+Une interface moderne a été créée dans le dossier `audit-ui`.
+
+### Comment lancer l'interface ?
+```bash
+cd audit-ui
+npm install
+npm run dev
+```
+L'interface sera accessible sur `http://localhost:5173`.
+Elle permet de visualiser en temps réel les transactions immuables stockées sur la Blockchain.
 
 ### Phase 4: Production-ready
 - [ ] Migrer vers une blockchain privée (Hyperledger Besu, Quorum)
