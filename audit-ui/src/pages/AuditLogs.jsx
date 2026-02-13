@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Shield } from 'lucide-react';
+import { Search, Filter, Shield, FileJson, FileText, Download } from 'lucide-react';
 import AuditService from '../services/AuditService';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AuditLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('ALL');
+    const [showExportMenu, setShowExportMenu] = useState(false);
 
     useEffect(() => {
         fetchLogs();
@@ -33,6 +36,90 @@ const AuditLogs = () => {
         log.action.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const exportJSON = () => {
+        const proofData = {
+            proofHeader: {
+                generatedAt: new Date().toISOString(),
+                auditSystem: "MedChain Blockchain Auditor",
+                version: "1.0.0",
+                integrityStatus: "VERIFIED",
+                totalRecords: filteredLogs.length
+            },
+            blockchainContext: {
+                network: "Ganache (Private Ethereum)",
+                contractAddress: "0x987e9C54Fb9009f323282D0c4654223bb4682CaB",
+                consensus: "Proof of Authority (Dev)"
+            },
+            logs: filteredLogs.map(log => ({
+                timestamp: new Date(log.timestamp).toISOString(),
+                userId: log.userId,
+                action: log.action,
+                resourceId: log.resourceId,
+                dataHash: log.dataHash || "N/A",
+                transactionHash: log.transactionHash,
+                status: "IMMUTABLE"
+            }))
+        };
+
+        const jsonString = JSON.stringify(proofData, null, 2);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const href = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = href;
+        link.download = `audit_proof_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setShowExportMenu(false);
+    };
+
+    const exportPDF = () => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(20);
+        doc.setTextColor(41, 128, 185);
+        doc.text("Blockchain Audit Report", 14, 22);
+
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+        doc.text(`System: MedChain Audit Platform`, 14, 35);
+        doc.text(`Total Records: ${filteredLogs.length}`, 14, 40);
+
+        // Blockchain Info
+        doc.setFontSize(10);
+        doc.text(`Contract: 0x987e9C54Fb9009f323282D0c4654223bb4682CaB`, 14, 48);
+        doc.text(`Network: Ganache (Private Ethereum)`, 14, 53);
+
+        // Table
+        const tableColumn = ["Time", "Action", "User ID", "Resource ID", "Status"];
+        const tableRows = [];
+
+        filteredLogs.forEach(log => {
+            const logData = [
+                new Date(log.timestamp).toLocaleString(),
+                log.action,
+                log.userId,
+                log.resourceId,
+                "VERIFIED"
+            ];
+            tableRows.push(logData);
+        });
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 60,
+            theme: 'grid',
+            headStyles: { fillColor: [41, 128, 185] },
+            alternateRowStyles: { fillColor: [240, 248, 255] }
+        });
+
+        doc.save(`audit_report_${new Date().toISOString().split('T')[0]}.pdf`);
+        setShowExportMenu(false);
+    };
+
     return (
         <div className="animate-fade-in">
             {/* Header Section */}
@@ -42,15 +129,84 @@ const AuditLogs = () => {
                         <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Blockchain Audit Trail</h1>
                         <p className="text-muted" style={{ fontSize: '0.95rem' }}>Immutable record of all sensitive actions.</p>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', zIndex: 10 }}>
                         <button className="btn btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem' }}>
                             <Filter size={18} />
                             <span>Filter</span>
                         </button>
-                        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.5rem' }}>
-                            <Shield size={18} />
-                            <span>Export Proof</span>
-                        </button>
+
+                        <div style={{ position: 'relative' }}>
+                            <button
+                                onClick={() => setShowExportMenu(!showExportMenu)}
+                                className="btn btn-primary"
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.5rem', cursor: 'pointer' }}
+                            >
+                                <Shield size={18} />
+                                <span>Export Proof</span>
+                            </button>
+
+                            {showExportMenu && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    marginTop: '0.5rem',
+                                    background: '#1e293b',
+                                    border: '1px solid rgba(148, 163, 184, 0.1)',
+                                    borderRadius: '0.5rem',
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)',
+                                    zIndex: 100,
+                                    overflow: 'hidden',
+                                    minWidth: '160px'
+                                }}>
+                                    <button
+                                        onClick={exportJSON}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem',
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            color: '#f1f5f9',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.875rem',
+                                            transition: 'background 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <FileJson size={16} style={{ color: '#60a5fa' }} />
+                                        <span>JSON Proof</span>
+                                    </button>
+                                    <button
+                                        onClick={exportPDF}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem',
+                                            width: '100%',
+                                            padding: '0.75rem 1rem',
+                                            color: '#f1f5f9',
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            textAlign: 'left',
+                                            fontSize: '0.875rem',
+                                            borderTop: '1px solid rgba(148, 163, 184, 0.1)',
+                                            transition: 'background 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <FileText size={16} style={{ color: '#4ade80' }} />
+                                        <span>PDF Report</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
 
