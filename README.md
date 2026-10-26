@@ -8,6 +8,16 @@ Ce projet est un **squelette de démarrage** pour un système de gestion hospita
 
 ---
 
+## 📸 Captures d'écran
+
+Interface d'audit `audit-ui` (MedChain), lancée en local avec Docker Compose le 26/10/2026. Les noms et e-mails affichés sont des données de démonstration.
+
+| Gestion des patients | Gestion du personnel |
+|---|---|
+| ![Gestion des patients](docs/screenshots/patients.png) | ![Gestion du personnel](docs/screenshots/staff.png) |
+
+---
+
 ## 🏗️ Architecture
 
 ```
